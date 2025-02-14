@@ -34,6 +34,7 @@ const BreakEvenCalculator = () => {
   const [results, setResults] = useState<{
     breakEvenPoint: number
     breakEvenRevenue: string
+    totalProfit: string
     totalContributionMargin: string
     averageContributionMarginRatio: number
   } | null>(null)
@@ -92,12 +93,15 @@ const BreakEvenCalculator = () => {
     const breakEvenPoint = totalFixedCosts / (totalContributionMargin / products.length)
     const breakEvenRevenue =
       breakEvenPoint * (productDetails.reduce((sum, product) => sum + product.sellingPrice, 0) / products.length)
+    
+    const totalProfit = breakEvenRevenue * averageContributionMarginRatio
 
     setResults({
       breakEvenPoint: Math.ceil(breakEvenPoint),
       breakEvenRevenue: formatCurrency(breakEvenRevenue),
       totalContributionMargin: formatCurrency(totalContributionMargin),
       averageContributionMarginRatio: averageContributionMarginRatio * 100,
+      totalProfit: formatCurrency(totalProfit),
     })
   }
 
@@ -234,16 +238,11 @@ const BreakEvenCalculator = () => {
                   (combinando todos tus productos/servicios) para alcanzar el punto de equilibrio.
                 </p>
                 <p className="mt-2">
-                  En este punto, tus ingresos totales serán de <strong>{results.breakEvenRevenue}</strong>, lo que
+                  En este punto, tus ingresos totales serán de <strong>{results.breakEvenRevenue}</strong>,y tu ganancia de <strong>{results.totalProfit}</strong>, lo que
                   cubrirá exactamente todos tus costos fijos y variables.
                 </p>
                 <p className="mt-2">
-                  El margen de contribución total de todos tus productos es{" "}
-                  <strong>{results.totalContributionMargin}</strong>.
-                </p>
-                <p className="mt-2">
-                  En promedio, el {results.averageContributionMarginRatio.toFixed(2)}% de cada venta contribuye a cubrir
-                  los costos fijos y generar ganancias.
+                  Y a partir de este punto de facturación, obtendras ganancias netas.
                 </p>
               </AlertDescription>
             </Alert>
