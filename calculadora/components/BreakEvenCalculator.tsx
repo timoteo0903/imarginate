@@ -90,7 +90,7 @@ const BreakEvenCalculator = () => {
     const averageContributionMarginRatio =
       productDetails.reduce((sum, product) => sum + product.contributionMarginRatio, 0) / productDetails.length
 
-    const breakEvenPoint = totalFixedCosts / (totalContributionMargin / products.length)
+    const breakEvenPoint = Math.ceil(totalFixedCosts / (totalContributionMargin / products.length))
     const breakEvenRevenue =
       breakEvenPoint * (productDetails.reduce((sum, product) => sum + product.sellingPrice, 0) / products.length)
     
@@ -239,10 +239,10 @@ const BreakEvenCalculator = () => {
                 </p>
                 <p className="mt-2">
                   En este punto, tus ingresos totales serán de <strong>{results.breakEvenRevenue}</strong>,y tu ganancia de <strong>{results.totalProfit}</strong>, lo que
-                  cubrirá exactamente todos tus costos fijos y variables.
+                  cubrirá todos tus costos fijos.
                 </p>
                 <p className="mt-2">
-                  Y a partir de este punto de facturación, obtendras ganancias netas.
+                  Y a partir de este punto de facturación, obtendras ganancias.
                 </p>
               </AlertDescription>
             </Alert>
