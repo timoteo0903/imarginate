@@ -9,6 +9,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
 import { NumericFormat } from "react-number-format"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Info, Trash2 } from "lucide-react"
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value)
@@ -18,7 +20,14 @@ const calculateVAT = (amount: number, vatRate: number) => {
   return amount * vatRate
 }
 
+interface AdditionalCharge {
+  name: string
+  rate: number
+}
+
 const MarginCalculator = () => {
+  const [TaxselectedValue, setTaxSelectedValue] = useState<{ [id: number]: string }>({});
+  const [PerceptionselectedValue, setPerceptionSelectedValue] = useState<{ [id: number]: string }>({});
   const [cost, setCost] = useState("")
   const [includeVAT, setIncludeVAT] = useState(false)
   const [markup, setMarkup] = useState("")
@@ -26,6 +35,8 @@ const MarginCalculator = () => {
   const [saleVAT, setSaleVAT] = useState("customer") // 'customer' or 'business'
   const [vatPercentage, setVatPercentage] = useState("21")
   const [saleVatPercentage, setSaleVatPercentage] = useState("21")
+  const [perceptions, setPerceptions] = useState<{ id: number; name: string; rate: number }[]>([]);
+  const [internalTaxes, setInternalTaxes] = useState<{ id: number; name: string; rate: number }[]>([]);  
   const [results, setResults] = useState<{
     sellingPrice: string
     grossProfit: string
@@ -36,9 +47,27 @@ const MarginCalculator = () => {
     saleVAT: string
     vatBalance: string
     netProfit: string
+    perceptionsTotal: string
+    internalTaxesTotal: string
+    finalPriceAT: string
   } | null>(null)
   const [purchaseVAT, setPurchaseVAT] = useState<string>("")
   const [saleVATAmount, setSaleVATAmount] = useState<string>("")
+
+  const PerceptionhandleValueChange = (id: number, value: string) => {
+    setPerceptionSelectedValue((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+  const TaxhandleValueChange = (id: number, value: string) => {
+    setTaxSelectedValue((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  };
+
+
 
   const calculateMargin = () => {
     const inputCost = Number.parseFloat(cost.replace(/[^\d.-]/g, ""))
@@ -93,8 +122,16 @@ const MarginCalculator = () => {
         grossProfit = sellingPrice - inputCost
       }
 
+      const perceptionsTotal = perceptions.reduce(
+        (total, perception) => total + (sellingPrice * perception.rate) / 100,
+        0,
+      )
+      const internalTaxesTotal = internalTaxes.reduce((total, tax) => total + (sellingPrice * tax.rate) / 100, 0)
+
+      const finalPriceAT = finalPrice -  (perceptionsTotal + internalTaxesTotal)
+
       const vatBalance = purchaseVATValue - saleVATAmountValue
-      const netProfit = grossProfit + vatBalance
+      const netProfit = grossProfit + vatBalance - perceptionsTotal - internalTaxesTotal
       const grossMarginPercentage = (netProfit / sistemPrice) * 100
 
       setResults({
@@ -107,6 +144,9 @@ const MarginCalculator = () => {
         saleVAT: formatCurrency(saleVATAmountValue),
         vatBalance: formatCurrency(vatBalance),
         netProfit: formatCurrency(netProfit),
+        perceptionsTotal: formatCurrency(perceptionsTotal),
+        internalTaxesTotal: formatCurrency(internalTaxesTotal),
+        finalPriceAT: formatCurrency(finalPriceAT)
       })
     } else {
       setResults(null)
@@ -146,6 +186,69 @@ const MarginCalculator = () => {
     }
   }
 
+
+
+
+  // Agregar una nueva percepción
+  const addPerception = () => {
+    setPerceptions([
+      ...perceptions,
+      {id: perceptions.length + 1, name: '', rate: 0 },
+    ]);
+  };
+
+
+  // Actualizar una percepción
+  const updatePerception = (id: number, field: 'name' | 'rate', value: string | number) => {
+    const updatedPerceptions = perceptions.map((perception) =>
+      perception.id === id
+        ? { ...perception, [field]: field === 'rate' ? Number(value) : value }
+        : perception
+    );
+    setPerceptions(updatedPerceptions);
+  };
+
+  // Agregar un nuevo impuesto interno
+  const addInternalTax = () => {
+    setInternalTaxes([
+      ...internalTaxes,
+      { id: internalTaxes.length + 1, name: '', rate: 0 },
+    ]);
+  };
+  // Actualizar un impuesto interno
+  const updateInternalTax = (id: number, field: 'name' | 'rate', value: string) => {
+    const updatedInternalTaxes = internalTaxes.map((tax) =>
+      tax.id === id
+        ? { ...tax, [field]: field === 'rate' ? Number(value) : value }
+        : tax
+    );
+    setInternalTaxes(updatedInternalTaxes);
+  };
+
+  const removePerception = (id: number) => {
+    // Eliminar percepción por id
+    setPerceptions((prev) => prev.filter((perception) => perception.id !== id));
+  
+    // Eliminar la selección de percepción asociada al id
+    setPerceptionSelectedValue((prev) => {
+      const updated = { ...prev };
+      delete updated[id]; // Eliminar la selección asociada
+      return updated;
+    });
+  };
+  
+  const removeInternalTax = (id: number) => {
+    // Eliminar impuesto interno por id
+    setInternalTaxes((prev) => prev.filter((tax) => tax.id !== id));
+  
+    // Eliminar la selección de impuesto interno asociada al id
+    setTaxSelectedValue((prev) => {
+      const updated = { ...prev };
+      delete updated[id]; // Eliminar la selección asociada
+      return updated;
+    });
+  };
+  
   return (
     <Card className="w-full max-w-lg mx-auto">
       <CardHeader>
@@ -226,7 +329,7 @@ const MarginCalculator = () => {
                       <SelectItem value="0">Exento</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                   </div>
               </div>
             )}
           </div>
@@ -272,6 +375,7 @@ const MarginCalculator = () => {
                       <SelectItem value="0">Exento</SelectItem>
                     </SelectContent>
                   </Select>
+
                 </div>
                 <RadioGroup
                   defaultValue="customer"
@@ -320,7 +424,121 @@ const MarginCalculator = () => {
                     <span>{results.sellingPrice}</span>
                   </>
                 )}
+
+                {perceptions.length > 0 && (
+                  <>
+                    <span className="font-medium">Total Percepciones:</span>
+                    <span className="text-red-500">{results.perceptionsTotal}</span>
+                  </>
+                )}
+
+                {internalTaxes.length > 0 && (
+                  <>
+                    <span className="font-medium red">Total Tasas Internas:</span>
+                    <span className="text-red-500">{results.internalTaxesTotal}</span>
+                  </>
+                )}
+
+                <span className="font-medium">Precio final (con todos los cargos):</span>
+                <span>{results.finalPriceAT}</span>
               </div>
+
+              <div className="mt-4 space-y-2">
+                <Button onClick={addPerception} variant="outline" size="sm" className="mr-2">
+                  Agregar Percepción
+                </Button>
+                <Button onClick={addInternalTax} variant="outline" size="sm">
+                  Agregar Tasa Interna
+                </Button>
+              </div>
+
+              {perceptions.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="font-semibold mb-2">Percepciones</h4>
+                  {perceptions.map((perception) => (
+                    <div key={perception.id} className="flex items-center space-x-2 mb-2 2xl">
+                      <Select value={PerceptionselectedValue[perception.id]} 
+                        onValueChange={(value) => PerceptionhandleValueChange(perception.id, value)}>
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Seleccione" className=" text-small "/>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="IIBB - CABA">IIBB - CABA</SelectItem>
+                          <SelectItem value="IIBB - BUENOS AIRES">IIBB - BUENOS AIRES</SelectItem>
+                          <SelectItem value="IIBB - CATAMARCA">IIBB - CATAMARCA</SelectItem>
+                          <SelectItem value="IIBB - CHACO">IIBB - CHACO</SelectItem>
+                          <SelectItem value="IIBB - CHUBUT">IIBB - CHUBUT</SelectItem>
+                          <SelectItem value="IIBB - CÓRDOBA">IIBB - CÓRDOBA</SelectItem>
+                          <SelectItem value="IIBB - ENTRE RÍOS">IIBB - ENTRE RÍOS</SelectItem>
+                          <SelectItem value="IIBB - FORMOSA">IIBB - FORMOSA</SelectItem>
+                          <SelectItem value="IIBB - JUJUY">IIBB - JUJUY</SelectItem>
+                          <SelectItem value="IIBB - LA PAMPA">IIBB - LA PAMPA</SelectItem>
+                          <SelectItem value="IIBB - LA RIOJA">IIBB - LA RIOJA</SelectItem>
+                          <SelectItem value="IIBB - MENDOZA">IIBB - MENDOZA</SelectItem>
+                          <SelectItem value="IIBB - MISIONES">IIBB - MISIONES</SelectItem>
+                          <SelectItem value="IIBB - NEUQUÉN">IIBB - NEUQUÉN</SelectItem>
+                          <SelectItem value="IIBB - RÍO NEGRO">IIBB - RÍO NEGRO</SelectItem>
+                          <SelectItem value="IIBB - SALTA">IIBB - SALTA</SelectItem>
+                          <SelectItem value="IIBB - SAN JUAN">IIBB - SAN JUAN</SelectItem>
+                          <SelectItem value="IIBB - SAN LUIS">IIBB - SAN LUIS</SelectItem>
+                          <SelectItem value="IIBB - SANTA CRUZ">IIBB - SANTA CRUZ</SelectItem>
+                          <SelectItem value="IIBB - SANTA FE">IIBB - SANTA FE</SelectItem>
+                          <SelectItem value="IIBB - SANTIAGO DEL ESTERO">IIBB - SANTIAGO DEL ESTERO</SelectItem>
+                          <SelectItem value="IIBB - TIERRA DEL FUEGO">IIBB - TIERRA DEL FUEGO</SelectItem>
+                          <SelectItem value="IIBB - TUCUMÁN">IIBB - TUCUMÁN</SelectItem>
+                        </SelectContent>
+                      </Select>   
+                      <NumericFormat
+                        value={perception.rate}
+                        onValueChange={(values) => updatePerception(perception.id, "rate", values.value)}
+                        suffix="%"
+                        decimalSeparator=","
+                        className="w-1/4"
+                      />
+                      <span className="w-1/4">
+                        {formatCurrency(Number(results.sellingPrice.replace(/[^\d,-]/g, "").replace(",", ".")) * (perception.rate / 100))}
+                      </span>
+                      <Button variant="ghost" size="icon" onClick={() => removePerception(perception.id)}>
+                                <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {internalTaxes.length > 0 && (
+                <div className="mt-4">
+                  <h4 className="font-semibold mb-2">Tasas Internas</h4>
+                  {internalTaxes.map((tax, index) => (
+                    <div key={index} className="flex items-center space-x-2 mb-2">
+                      <Select value={TaxselectedValue[tax.id]} 
+                        onValueChange={(value) => TaxhandleValueChange(tax.id, value)}>
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="Seleccione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="IIBB - BUENOS AIRES">TASAS MUNICIPALES</SelectItem>
+                          <SelectItem value="IIBB - CABA">TASAS PROVINCIALES</SelectItem>
+                          <SelectItem value="IIBB- MENDOZA">TASAS AL COMBUSTIBLE</SelectItem>
+                        </SelectContent>
+                      </Select>                     
+                      <NumericFormat
+                        value={tax.rate}
+                        onValueChange={(values) => updateInternalTax(tax.id, "rate", values.value)}
+                        suffix="%"
+                        decimalSeparator=","
+                        className="w-1/4"
+                      />
+                      <span className="w-1/4">
+                        {formatCurrency(Number(results.sellingPrice.replace(/[^\d,-]/g, "").replace(",", ".")) * (tax.rate / 100))}  
+                      </span>
+                      <Button variant="ghost" size="icon" onClick={() => removeInternalTax(tax.id)}>
+                                <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="bg-green-50 p-4 rounded-lg">
@@ -346,14 +564,13 @@ const MarginCalculator = () => {
                     {saleVatPercentage === "custom" ? `${saleVatPercentage}%` : `${saleVatPercentage}%`}):
                   </span>
                   <span>{saleVATAmount}</span>
-                  <span className="font-medium">
-                    {Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "IVA en contra" : "IVA a favor"}.
-                    </span>
+                  <span className="font-medium">IVA a pagar/recibir:</span>
                   <span
                     className={
                       Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "text-red-500" : "text-green-600"
                     }
                   >
+                    {Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "Pagar: " : "Recibir: "}
                     {results.vatBalance}
                   </span>
                 </div>
@@ -370,14 +587,15 @@ const MarginCalculator = () => {
                   {results.finalPrice}.
                 </p>
                 <p>
-                  Tu ganancia es de {results.netProfit}, que representa el {results.grossMarginPercentage}% del precio
+                  Tu ganancia después de impuestos, es de {results.netProfit}, que representa el {results.grossMarginPercentage}% del precio
                   de venta.
                 </p>
                 {sellWithVAT && (
                   <p className="mt-2">
                     Recuerda que del IVA que cobras en la venta ({saleVATAmount}, al{" "}
-                    {saleVatPercentage === "custom" ? `${saleVatPercentage}%` : `${saleVatPercentage}%`}), tenes{" "}
-                    {Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "en contra" : "a favor"} {results.vatBalance}{" "}.
+                    {saleVatPercentage === "custom" ? `${saleVatPercentage}%` : `${saleVatPercentage}%`}), debes{" "}
+                    {Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "pagar" : "recibir"} {results.vatBalance}{" "}
+                    {Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "al" : "del"} gobierno.
                   </p>
                 )}
               </AlertDescription>
