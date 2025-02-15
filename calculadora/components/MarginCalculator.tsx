@@ -9,8 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
 import { NumericFormat } from "react-number-format"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Info, Trash2 } from "lucide-react"
+import { Trash2 } from "lucide-react"
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value)
