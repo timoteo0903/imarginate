@@ -19,10 +19,6 @@ const calculateVAT = (amount: number, vatRate: number) => {
   return amount * vatRate
 }
 
-interface AdditionalCharge {
-  name: string
-  rate: number
-}
 
 const MarginCalculator = () => {
   const [TaxselectedValue, setTaxSelectedValue] = useState<{ [id: number]: string }>({});
