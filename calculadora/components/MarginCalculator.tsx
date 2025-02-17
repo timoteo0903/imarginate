@@ -133,7 +133,7 @@ const MarginCalculator = () => {
       // Aplicar el descuento
       let discountAmount = 0
       if (discountType === "percentage") {
-        discountAmount = (finalPriceAT * Number(discountValue)) / 100
+        discountAmount = (finalPrice * Number(discountValue)) / 100
       } else {
         discountAmount = Number(discountValue)
       }
@@ -429,7 +429,7 @@ const MarginCalculator = () => {
                 <span className="font-medium ">Total Percepciones:</span>
                 <span className=" text-red-500 ">{results.totalTaxes}</span>
 
-                <span className="font-medium">Precio final (con todos los cargos):</span>
+                <span className="font-medium">Monto a recibir después de impuestos:</span>
                 <span>{results.finalPriceAT}</span>
               </div>
 
@@ -516,18 +516,8 @@ const MarginCalculator = () => {
               <div className="grid grid-cols-2 gap-2">
                 <span className="font-medium">Descuento aplicado:</span>
                 <span>{results.discountAmount}</span>
-                <span className="font-medium">Precio final con descuento:</span>
+                <span className="font-medium">Monto final a recibir con descuento:</span>
                 <span>{results.finalPriceWithDiscount}</span>
-                <span className="font-medium">Ganancia con descuento:</span>
-                <span
-                  className={
-                    Number(results.netProfit.replace(/[^\d.-]/g, "")) < 0
-                      ? "text-red-500"
-                      : "text-green-600"
-                  }
-                >
-                  {results.netProfit}
-                </span>
               </div>
             </div>
 
@@ -544,13 +534,12 @@ const MarginCalculator = () => {
                     {saleVatPercentage === "custom" ? `${saleVatPercentage}%` : `${saleVatPercentage}%`}):
                   </span>
                   <span>{saleVATAmount}</span>
-                  <span className="font-medium">IVA a pagar/recibir:</span>
+                  <span className="font-medium">Balanza de IVA:</span>
                   <span
                     className={
                       Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "text-red-500" : "text-green-600"
                     }
                   >
-                    {Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "Pagar: " : "Recibir: "}
                     {results.vatBalance}
                   </span>
                 </div>
