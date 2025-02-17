@@ -221,7 +221,7 @@ const MarginCalculator = () => {
 
   useEffect(() => {
     calculateMargin()
-  }, [cost, includeVAT,vatPercentage, discountType, discountValue])
+  }, [cost, discountType, discountValue])
 
   useEffect(() => {
     calculateMargin()
