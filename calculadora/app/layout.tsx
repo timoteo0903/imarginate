@@ -9,8 +9,8 @@ import type React from "react" // Added import for React
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Calculadora Financiera",
-  description: "Calcula márgenes y puntos de equilibrio fácilmente",
+  title: "Imarginante",  
+  description: "Calcula márgenes y puntos de equilibrio fácilmente"
 }
 
 export default function RootLayout({

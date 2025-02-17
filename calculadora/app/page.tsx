@@ -9,8 +9,11 @@ export default function Home() {
       <Card className="w-full max-w-4xl bg-[#374357] backdrop-blur-sm shadow-xl border-none"> 
         <CardContent className="p-6">
           <h1 className="text-4xl md:text-4xl font-bold text-center mb-8 text-gradient bg-clip-text text-transparent bg-[#FFFFFF]">
-            Calculadora Financiera Pro
+          IMARGINATE 
           </h1>
+          <h2 className="text-4xl md:text-2xl font-bold text-center mb-8 text-gradient bg-clip-text text-transparent bg-[#FFFFFF]">
+            Tu herramienta Financiera para tu negocio
+          </h2>
           <p className="text-xl text-center mb-12 text-[#acc2ef]">
             Optimiza tus finanzas con nuestras herramientas de cálculo avanzadas
           </p>
