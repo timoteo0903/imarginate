@@ -60,7 +60,7 @@ const MarginCalculator = () => {
   const [discountType, setDiscountType] = useState<"percentage" | "fixed">("percentage")
   const [discountValue, setDiscountValue] = useState<string>("")
   const [maxDiscount, setMaxDiscount] = useState<number>(0)
-  const [maxDiscountPercentage, setMaxDiscountPercentage] = useState<number>(0)
+  const [,setMaxDiscountPercentage] = useState<number>(0)
 
   const [chartData, setChartData] = useState<{
     cost: number

@@ -28,12 +28,14 @@ const PriceBreakdownChart: React.FC<PriceBreakdownChartProps> = ({
   const totalTaxesPercentage = (totalTaxes / finalPrice) * 100
 
   const data = [
-    { name: "Costo", value: costPercentage, label: cost , color: "#1b263b"},
-    { name: "Ganancia", value: profitPercentage , label: profit, color:"#16a34a"},
-    { name: "Descuento", value: discountPercentage , label: discount, color: "#ae2012"},
-    { name: "IVA", value: vatBalancePercentage , label: vatBalance, color: "#415a77"},
-    { name: "Tasas y Percepciones", value: totalTaxesPercentage , label: totalTaxes, color: "#ff7d00"},
+    { name: "Costo", value: costPercentage, label: cost , color: "#1b263b", prefix: "El"},
+    { name: "Ganancia", value: profitPercentage , label: profit, color:"#16a34a", prefix: "La"},
+    { name: "Descuento", value: discountPercentage , label: discount, color: "#ae2012", prefix:"El"},
+    { name: "IVA", value: vatBalancePercentage , label: vatBalance, color: "#415a77", prefix: "El"},
+    { name: "Tasas y Percepciones", value: totalTaxesPercentage , label: totalTaxes, color: "#ff7d00", prefix: "Las"},
   ]
+
+  const dataFiltered = data.filter((item) => item.value > 0)
 
   return (
     <Card className="w-full mt-6">
@@ -45,14 +47,14 @@ const PriceBreakdownChart: React.FC<PriceBreakdownChartProps> = ({
           <PieChart>
             <Legend />
             <Pie
-              data={data}
+              data={dataFiltered}
               cx="50%"
               cy="50%"
               labelLine={false}
               outerRadius={150}
               fill="#8884d8"
               dataKey="value"
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
+              label={({ name, value }) => `${name} ${(value).toFixed(1)}%`}
             >
               {data.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
@@ -67,12 +69,12 @@ const PriceBreakdownChart: React.FC<PriceBreakdownChartProps> = ({
           </PieChart>
         </ResponsiveContainer>
         <div className="mt-4 text-sm text-gray-600">
-          <p><strong>Costo:</strong> El costo representa el <strong>{costPercentage.toFixed(1)}%</strong> del precio de venta.</p>
-          <p><strong>Ganancia:</strong> La ganancia representa el <strong>{profitPercentage.toFixed(1)}%</strong> del precio de venta.</p>
-          <p><strong>Descuento:</strong> El descuento aplicado representa el <strong>{discountPercentage.toFixed(1)}%</strong> del precio de venta.</p>
-          <p><strong>IVA:</strong> El saldo de IVA representa el <strong>{vatBalancePercentage.toFixed(1)}%</strong> del precio de venta.</p>
-          <p><strong>Tasas Y Percepciones:</strong> Las Tasas y Percepciones representan el <strong>{totalTaxesPercentage.toFixed(1)}%</strong> del precio de venta.</p>
-        </div>
+          {dataFiltered.map((item) => (
+            <p key={item.name}>
+              <strong style={{ color: item.color }}>{item.name}: </strong >{item.prefix} {item.name} representa el <strong style={{ color: item.color }}>{item.value.toFixed(1)}%</strong> del precio de venta.
+            </p>
+            ))}
+        </div>  
       </CardContent>
     </Card>
   )
