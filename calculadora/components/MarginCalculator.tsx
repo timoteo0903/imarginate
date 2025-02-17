@@ -95,7 +95,7 @@ const MarginCalculator = () => {
         setPurchaseVAT("")
       }
 
-      let sellingPrice = costWithoutVAT * (1 + markupValue / 100)
+      let sellingPrice = inputCost * (1 + markupValue / 100)
       let grossProfit: number
       let finalPrice: number
       let saleVATAmountValue: number
@@ -108,7 +108,7 @@ const MarginCalculator = () => {
           grossProfit = finalPrice - inputCost
         } else {
           finalPrice = sellingPrice
-          sellingPrice = sellingPrice / (1 + saleVatRate)
+          sellingPrice = finalPrice / (1 + saleVatRate)
           saleVATAmountValue = finalPrice - sellingPrice
           setSaleVATAmount(formatCurrency(saleVATAmountValue))
           grossProfit = finalPrice - inputCost
@@ -138,7 +138,7 @@ const MarginCalculator = () => {
         discountAmount = Number(discountValue)
       }
 
-      const finalPriceWithDiscount = finalPriceAT - discountAmount
+      const finalPriceWithDiscount = finalPrice - discountAmount
 
       const vatBalance = purchaseVATValue - saleVATAmountValue
       const netProfit = grossProfit + vatBalance - totalTaxes - discountAmount
@@ -211,7 +211,7 @@ const MarginCalculator = () => {
         newSaleVatPercentage === "custom"
           ? Number.parseFloat(newSaleVatPercentage) / 100
           : Number.parseFloat(newSaleVatPercentage) / 100
-      const sellingPriceValue = Number.parseFloat(results.sellingPrice.replace(/[^\d.-]/g, ""))
+      const sellingPriceValue = Number.parseFloat(results.finalPriceWithDiscount.replace(/[^\d.-]/g, ""))
       const vatAmount = calculateVAT(sellingPriceValue, vatRate)
       setSaleVATAmount(formatCurrency(vatAmount))
     } else {
