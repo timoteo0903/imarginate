@@ -366,7 +366,7 @@ const MarginCalculator = () => {
 
           <div className="space-y-2">
             <Label className="block text-sm font-medium mb-1">Método de cálculo</Label>
-            <Select value={marginMethod} onValueChange={setMarginMethod}>
+            <Select value={marginMethod} onValueChange={(value: "markup" | "marginOnSale") => setMarginMethod(value)}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleccione el método de cálculo" />
               </SelectTrigger>
