@@ -69,6 +69,8 @@ const MarginCalculator = () => {
   const [,setMaxDiscountPercentage] = useState<number>(0)
   const [discountPercentage, setDiscountPercentage] = useState<number>(0)
   
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
   //Chart
   const [chartData, setChartData] = useState<{
     cost: number
@@ -91,6 +93,13 @@ const MarginCalculator = () => {
         ? Number.parseFloat(saleVatPercentage) / 100
         : Number.parseFloat(saleVatPercentage) / 100
 
+    if (marginMethod === "marginOnSale" && marginValueNumber >= 100) {
+      alert("El margen sobre venta debe ser menor al 100%.")
+      setResults(null)
+      setChartData(null)
+      return
+    }    
+
     if (inputCost && marginValueNumber) {
       let costWithoutVAT: number
       let purchaseVATValue: number
@@ -107,11 +116,11 @@ const MarginCalculator = () => {
 
       let netAmount: number //Importe Neto Gravado (SObre esto calculo los %)
       if (marginMethod === "markup") {
-        netAmount = inputCost * (1 + marginValueNumber / 100)
-      } else {
-        // marginOnSale
-        netAmount = inputCost / (1 - marginValueNumber / 100)
-      }
+        netAmount = inputCost * (1 + marginValueNumber / 100);
+      } 
+      else {
+          netAmount = inputCost / (1 - marginValueNumber / 100);
+        }
       
       let grossProfit: number
       let salePrice: number
@@ -296,7 +305,7 @@ const MarginCalculator = () => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <Info className="h-6 w-6 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Ingrese el costo del producto sin IVA</p>
@@ -386,7 +395,7 @@ const MarginCalculator = () => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <Info className="h-6 w-6 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>
@@ -549,7 +558,7 @@ const MarginCalculator = () => {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Info className="h-5 w-5 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
+                          <Info className="h-6 w-6 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>
