@@ -13,7 +13,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Info, Percent, DollarSign } from "lucide-react"
 import AdditionalChargesSection from "./AdditionalChargesSection"
 import { Switch } from "@/components/ui/switch"
-import { Progress } from "@/components/ui/progess"
 import PriceBreakdownChart from "./PriceBreakdownChart"
 
 
