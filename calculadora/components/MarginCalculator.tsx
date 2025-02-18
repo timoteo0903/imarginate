@@ -261,7 +261,7 @@ const MarginCalculator = () => {
   
   useEffect(() => {
     calculateMargin()
-  }, [cost, discountType, discountValue, marginMethod])
+  }, [cost, discountType, discountValue])
 
   useEffect(() => {
     calculateMargin()
