@@ -69,7 +69,6 @@ const MarginCalculator = () => {
   const [,setMaxDiscountPercentage] = useState<number>(0)
   const [discountPercentage, setDiscountPercentage] = useState<number>(0)
   
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   //Chart
   const [chartData, setChartData] = useState<{
