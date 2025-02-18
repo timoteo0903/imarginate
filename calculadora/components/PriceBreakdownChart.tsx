@@ -4,7 +4,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recha
 
 interface PriceBreakdownChartProps {
   cost: number
-  netAmountDiscount: number
+  salePrice: number
   totalTaxes:number
   profit: number
   discountAmount: number
@@ -14,19 +14,19 @@ interface PriceBreakdownChartProps {
 
 const PriceBreakdownChart: React.FC<PriceBreakdownChartProps> = ({
   cost,
-  netAmountDiscount,
+  salePrice,
   profit,
   discountAmount,
   vatBalance,
   totalTaxes,
 }) => {
   // Calcular los porcentajes en función del precio de venta
-  const costPercentage = (cost / netAmountDiscount) * 100
-  const profitPercentage = (profit / netAmountDiscount) * 100
-  const discountPercentage = (discountAmount / netAmountDiscount) * 100
-  const vatBalancePercentage = (vatBalance / netAmountDiscount) * 100
-  const totalTaxesPercentage = (totalTaxes / netAmountDiscount) * 100
-
+  const costPercentage = (cost / salePrice) * 100
+  const profitPercentage = (profit / salePrice) * 100
+  const discountPercentage = (discountAmount / salePrice) * 100
+  const vatBalancePercentage = (vatBalance / salePrice) * 100
+  const totalTaxesPercentage = (totalTaxes / salePrice) * 100
+  
   const data = [
     { name: "Costo", value: costPercentage, label: cost , color: "#1b263b", prefix: "El"},
     { name: "Ganancia", value: profitPercentage , label: profit, color:"#16a34a", prefix: "La"},
@@ -71,7 +71,7 @@ const PriceBreakdownChart: React.FC<PriceBreakdownChartProps> = ({
         <div className="mt-4 text-sm text-gray-600">
           {dataFiltered.map((item) => (
             <p key={item.name}>
-              <strong style={{ color: item.color }}>{item.name}: </strong >{item.prefix} {item.name} representa el <strong style={{ color: item.color }}>{item.value.toFixed(1)}%</strong> del precio de venta.
+              <strong style={{ color: item.color }}>{item.name}: </strong >{item.prefix} {item.name} <strong style={{ color: item.color }}> (${item.label})</strong> representa el <strong style={{ color: item.color }}>{item.value.toFixed(1)}%</strong> del precio de venta.
             </p>
             ))}
         </div>  

@@ -13,7 +13,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Info, Percent, DollarSign } from "lucide-react"
 import AdditionalChargesSection from "./AdditionalChargesSection"
 import { Switch } from "@/components/ui/switch"
+import { Progress } from "@/components/ui/progess"
 import PriceBreakdownChart from "./PriceBreakdownChart"
+
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value)
@@ -32,7 +34,8 @@ interface AdditionalCharge {
 const MarginCalculator = () => {
   const [cost, setCost] = useState("")
   const [includeVAT, setIncludeVAT] = useState(false)
-  const [markup, setMarkup] = useState("")
+  const [marginMethod, setMarginMethod] = useState<"markup" | "marginOnSale">("markup")
+  const [marginValue, setMarginValue] = useState("")
   const [sellWithVAT, setSellWithVAT] = useState(false)
   const [saleVAT, setSaleVAT] = useState("customer")
   const [vatPercentage, setVatPercentage] = useState("21")
@@ -65,10 +68,12 @@ const MarginCalculator = () => {
   const [discountValue, setDiscountValue] = useState<string>("")
   const [maxDiscount, setMaxDiscount] = useState<number>(0)
   const [,setMaxDiscountPercentage] = useState<number>(0)
-
+  const [discountPercentage, setDiscountPercentage] = useState<number>(0)
+  
+  //Chart
   const [chartData, setChartData] = useState<{
     cost: number
-    netAmountDiscount: number
+    salePrice: number
     profit: number
     discountAmount: number
     taxes:number
@@ -79,7 +84,7 @@ const MarginCalculator = () => {
 
   const calculateMargin = () => {
     const inputCost = Number.parseFloat(cost.replace(/[^\d.-]/g, ""))
-    const markupValue = Number.parseFloat(markup)
+    const marginValueNumber = Number.parseFloat(marginValue)
     const vatRate =
       vatPercentage === "custom" ? Number.parseFloat(vatPercentage) / 100 : Number.parseFloat(vatPercentage) / 100
     const saleVatRate =
@@ -87,7 +92,7 @@ const MarginCalculator = () => {
         ? Number.parseFloat(saleVatPercentage) / 100
         : Number.parseFloat(saleVatPercentage) / 100
 
-    if (inputCost && markupValue) {
+    if (inputCost && marginValueNumber) {
       let costWithoutVAT: number
       let purchaseVATValue: number
 
@@ -101,7 +106,14 @@ const MarginCalculator = () => {
         setPurchaseVAT("")
       }
 
-      let netAmount = inputCost * (1 + markupValue / 100) //Importe Neto Gravado (SObre esto calculo los %)
+      let netAmount: number //Importe Neto Gravado (SObre esto calculo los %)
+      if (marginMethod === "markup") {
+        netAmount = inputCost * (1 + marginValueNumber / 100)
+      } else {
+        // marginOnSale
+        netAmount = inputCost / (1 - marginValueNumber / 100)
+      }
+      
       let grossProfit: number
       let salePrice: number
       let saleVATAmountValue: number
@@ -176,7 +188,10 @@ const MarginCalculator = () => {
 
       const maxDiscountPercentage = (maxDiscountAmount / salePrice) * 100
       setMaxDiscountPercentage(maxDiscountPercentage)
-
+      
+      
+      const discountPercentage = discountAmount > 0 ? (discountAmount / maxDiscountAmount) * 100 : 0
+      setDiscountPercentage(discountPercentage)
 
       setResults({
         netAmount: formatCurrency(netAmount),
@@ -198,7 +213,7 @@ const MarginCalculator = () => {
       })
       setChartData({
         cost: Number(cost),
-        netAmountDiscount: netAmountDiscount,
+        salePrice: salePrice,
         profit: netProfit,
         taxes: totalTaxes,
         discountAmount: discountAmount,
@@ -239,7 +254,7 @@ const MarginCalculator = () => {
   
   useEffect(() => {
     calculateMargin()
-  }, [cost, discountType, discountValue])
+  }, [cost, discountType, discountValue, marginMethod])
 
   useEffect(() => {
     calculateMargin()
@@ -342,19 +357,32 @@ const MarginCalculator = () => {
             )}
           </div>
 
+          <div className="space-y-2">
+            <Label className="block text-sm font-medium mb-1">Método de cálculo</Label>
+            <Select value={marginMethod} onValueChange={setMarginMethod}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleccione el método de cálculo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="markup">Markup</SelectItem>
+                <SelectItem value="marginOnSale">Margen sobre venta</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div>
-            <Label htmlFor="markup" className="block text-sm font-medium mb-1">
-              MarkUp (%)
+            <Label htmlFor="marginValue" className="block text-sm font-medium mb-1">
+              {marginMethod === "markup" ? "MarkUp (%)" : "Margen sobre venta (%)"}
             </Label>
             <div className="flex items-center space-x-2">
               <NumericFormat
-                id="markup"
-                value={markup}
-                onValueChange={(values) => setMarkup(values.value)}
+                id="marginValue"
+                value={marginValue}
+                onValueChange={(values) => setMarginValue(values.value)}
                 decimalSeparator=","
                 suffix="%"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Ingrese el MarkUp"
+                placeholder={`Ingrese el ${marginMethod === "markup" ? "MarkUp" : "Margen sobre venta"}`}
               />
               <TooltipProvider>
                 <Tooltip>
@@ -362,7 +390,11 @@ const MarginCalculator = () => {
                     <Info className="h-4 w-4 text-muted-foreground" />
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Porcentaje que agregas al costo de un producto para obtener su precio de venta. </p>
+                    <p>
+                      {marginMethod === "markup"
+                        ? "Porcentaje que agregas al costo de un producto para obtener su precio de venta."
+                        : "Porcentaje de margen, calculado sobre el precio de venta."}
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -416,8 +448,13 @@ const MarginCalculator = () => {
               </div>
             )}
           </div>
+          
 
-          <Button onClick={calculateMargin} className="w-full" type="button">
+          <Button
+            onClick={calculateMargin}
+            className="w-full h-10 text-lg font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-gray-800 hover:bg-gray-700 text-white shadow-lg"
+            type="button"
+          >
             Calcular Margen
           </Button>
         </form>
@@ -487,46 +524,83 @@ const MarginCalculator = () => {
                   setInternalTaxes([...internalTaxes, { name: "", rate: 0 }])
                 }}
               />
-              <div className="mt-4">
+                <div className="mt-4">
                 <h4 className="font-semibold mb-2">Descuento</h4>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    checked={discountType === "percentage"}
-                    onCheckedChange={(checked) => setDiscountType(checked ? "percentage" : "fixed")}
-                  />
-                  <Label>
-                    {discountType === "percentage" ? (
-                      <Percent className="h-4 w-4" />
-                    ) : (
-                      <DollarSign className="h-4 w-4" />
-                    )}
-                  </Label>
-                  <NumericFormat
-                    value={discountValue}
-                    onValueChange={(values) => setDiscountValue(values.value)}
-                    decimalSeparator=","
-                    suffix={discountType === "percentage" ? "%" : ""}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    placeholder={`Ingrese el descuento ${discountType === "percentage" ? "porcentual (%)" : "fijo ($)"}`}
-                  />
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-8 w-8 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>
-                          Descuento máximo sin pérdida:{" "}
-                          {discountType === "percentage"
-                            ? `${results.maxDiscountPercentage}%`
-                            : formatCurrency(maxDiscount)}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={discountType === "percentage"}
+                      onCheckedChange={(checked) => setDiscountType(checked ? "percentage" : "fixed")}
+                    />
+                    <Label>
+                      {discountType === "percentage" ? (
+                        <Percent className="h-4 w-4" />
+                      ) : (
+                        <DollarSign className="h-4 w-4" />
+                      )}
+                    </Label>
+                    <NumericFormat
+                      value={discountValue}
+                      onValueChange={(values) => setDiscountValue(values.value)}
+                      decimalSeparator=","
+                      suffix={discountType === "percentage" ? "%" : ""}
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      placeholder={`Ingrese el descuento ${discountType === "percentage" ? "porcentual (%)" : "fijo ($)"}`}
+                    />
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Info className="h-5 w-5 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            Descuento máximo sin pérdida:{" "}
+                            {discountType === "percentage"
+                              ? `${results.maxDiscountPercentage}%`
+                              : formatCurrency(maxDiscount)}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                  <div className="relative pt-6">
+                    <div className="flex mb-2 items-center justify-between ">
+                      <div>
+                        <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-[#264653] bg-[#f5f5f5]">
+                          Descuento aplicado
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xs font-semibold inline-block text-[#264653]">
+                          {discountPercentage.toFixed(2)}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-[#f5f5f5 ]">
+                      <div
+                        style={{ width: `${Math.min(discountPercentage, 100)}%` }}
+                        className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center transition-all duration-500 ease-in-out ${
+                          discountPercentage <= 50
+                            ? "bg-[#e9c46a]"
+                            : discountPercentage <= 75
+                              ? "bg-[#f4a261]"
+                              : discountPercentage <= 100
+                                ? "bg-[#e76f51]"
+                                : "bg-red-500"
+                        }`}
+                      ></div>
+                    </div>
+                    <div className="absolute right-0 -mt-6 pt-3 text-xs text-[#264653]">
+                      Máx: {formatCurrency(maxDiscount)}
+                    </div>
+                  </div>
+                  {discountPercentage > 100 && (
+                    <p className="text-xs text-red-500 mt-1">Advertencia: El descuento supera el máximo recomendado.</p>
+                  )}
                 </div>
               </div>
             </div>
+
 
 
             <div className="bg-blue-50 p-4 rounded-lg">
@@ -607,7 +681,7 @@ const MarginCalculator = () => {
           {results && chartData && (
             <PriceBreakdownChart
               cost={chartData.cost}
-              netAmountDiscount={chartData.netAmountDiscount}
+              salePrice={chartData.salePrice}
               profit={chartData.profit}
               totalTaxes={chartData.taxes}
               discountAmount={chartData.discountAmount}
@@ -615,7 +689,6 @@ const MarginCalculator = () => {
             />
           )}
       </CardContent>
-      
     </Card>
   )
 }

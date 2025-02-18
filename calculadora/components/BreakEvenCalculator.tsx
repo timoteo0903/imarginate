@@ -146,7 +146,12 @@ const BreakEvenCalculator = () => {
                 ))}
               </TableBody>
             </Table>
-            <Button onClick={addFixedCost} className="mt-2">
+            
+          <Button
+            onClick={addFixedCost}
+            className="mt-2 h-10 text-m font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-[#E24D28] hover:bg-[#A23216] text-white shadow-lg"
+            type="button"
+          >
               Agregar Gasto Fijo
             </Button>
           </div>
@@ -169,7 +174,7 @@ const BreakEvenCalculator = () => {
                       <Input
                         value={product.name}
                         onChange={(e) => updateProduct(product.id, "name", e.target.value)}
-                        placeholder="Nombre del producto/servicio"
+                        placeholder="Producto/servicio"
                       />
                     </TableCell>
                     <TableCell>
@@ -199,12 +204,20 @@ const BreakEvenCalculator = () => {
                 ))}
               </TableBody>
             </Table>
-            <Button onClick={addProduct} className="mt-2">
+            <Button
+            onClick={addProduct}
+            className="mt-2 h-10 text-m font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-[#228176] hover:bg-[#1A6158] text-white shadow-lg"
+            type="button"
+          >
               Agregar Producto/Servicio
             </Button>
           </div>
 
-          <Button onClick={calculateBreakEven} className="w-full">
+          <Button
+            onClick={calculateBreakEven}
+            className="w-full h-10 text-m font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-gray-800 hover:bg-gray-700 text-white shadow-lg"
+            type="button"
+          >
             Calcular Punto de Equilibrio
           </Button>
         </div>
