@@ -4,33 +4,33 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recha
 
 interface PriceBreakdownChartProps {
   cost: number
-  finalPrice: number
+  netAmountDiscount: number
   totalTaxes:number
   profit: number
-  discount: number
+  discountAmount: number
   vatBalance:number
 }
 
 
 const PriceBreakdownChart: React.FC<PriceBreakdownChartProps> = ({
   cost,
-  finalPrice,
+  netAmountDiscount,
   profit,
-  discount,
+  discountAmount,
   vatBalance,
   totalTaxes,
 }) => {
   // Calcular los porcentajes en función del precio de venta
-  const costPercentage = (cost / finalPrice) * 100
-  const profitPercentage = (profit / finalPrice) * 100
-  const discountPercentage = (discount / finalPrice) * 100
-  const vatBalancePercentage = (vatBalance / finalPrice) * 100
-  const totalTaxesPercentage = (totalTaxes / finalPrice) * 100
+  const costPercentage = (cost / netAmountDiscount) * 100
+  const profitPercentage = (profit / netAmountDiscount) * 100
+  const discountPercentage = (discountAmount / netAmountDiscount) * 100
+  const vatBalancePercentage = (vatBalance / netAmountDiscount) * 100
+  const totalTaxesPercentage = (totalTaxes / netAmountDiscount) * 100
 
   const data = [
     { name: "Costo", value: costPercentage, label: cost , color: "#1b263b", prefix: "El"},
     { name: "Ganancia", value: profitPercentage , label: profit, color:"#16a34a", prefix: "La"},
-    { name: "Descuento", value: discountPercentage , label: discount, color: "#ae2012", prefix:"El"},
+    { name: "Descuento", value: discountPercentage , label: discountAmount, color: "#ae2012", prefix:"El"},
     { name: "IVA", value: vatBalancePercentage , label: vatBalance, color: "#415a77", prefix: "El"},
     { name: "Tasas y Percepciones", value: totalTaxesPercentage , label: totalTaxes, color: "#ff7d00", prefix: "Las"},
   ]

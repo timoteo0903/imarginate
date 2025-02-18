@@ -20,7 +20,7 @@ interface AdditionalChargesSectionProps {
   addPerception: () => void
   addInternalTax: () => void
   results: {
-    sellingPrice: string
+    netAmount: string
   } | null
   formatCurrency: (value: number) => string
 }
@@ -89,7 +89,7 @@ const AdditionalChargesSection: React.FC<AdditionalChargesSectionProps> = ({
                   {results && (
                     <span className="w-15">
                       {formatCurrency(
-                        Number(results.sellingPrice.replace(/[^\d,-]/g, "").replace(",", ".")) *
+                        Number(results.netAmount.replace(/[^\d,-]/g, "").replace(",", ".")) *
                           (perception.rate / 100),
                       )}
                     </span>
@@ -131,7 +131,7 @@ const AdditionalChargesSection: React.FC<AdditionalChargesSectionProps> = ({
                   {results && (
                     <span className="w-15">
                       {formatCurrency(
-                        Number(results.sellingPrice.replace(/[^\d,-]/g, "").replace(",", ".")) * (tax.rate / 100),
+                        Number(results.netAmount.replace(/[^\d,-]/g, "").replace(",", ".")) * (tax.rate / 100),
                       )}
                     </span>
                   )}

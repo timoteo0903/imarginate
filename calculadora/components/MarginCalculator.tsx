@@ -28,6 +28,7 @@ interface AdditionalCharge {
   rate: number
 }
 
+
 const MarginCalculator = () => {
   const [cost, setCost] = useState("")
   const [includeVAT, setIncludeVAT] = useState(false)
@@ -38,11 +39,12 @@ const MarginCalculator = () => {
   const [saleVatPercentage, setSaleVatPercentage] = useState("21")
   const [perceptions, setPerceptions] = useState<AdditionalCharge[]>([])
   const [internalTaxes, setInternalTaxes] = useState<AdditionalCharge[]>([])
+  const [netAmountDiscountRaw, setnetAmountDiscountRaw] = useState<number>(0);
   const [results, setResults] = useState<{
-    sellingPrice: string
+    netAmount: string
     grossProfit: string
     grossMarginPercentage: string
-    finalPrice: string
+    salePrice: string
     purchaseVAT: string
     saleVAT: string
     vatBalance: string
@@ -50,13 +52,15 @@ const MarginCalculator = () => {
     perceptionsTotal: string
     internalTaxesTotal: string
     totalTaxes: string
-    finalPriceAT: string
-    finalPriceWithDiscount: string
+    salePriceAT: string
+    netAmountDiscount: string
     discountAmount: string
     maxDiscountPercentage:string
+    salePriceDiscount:string
   } | null>(null)
   const [purchaseVAT, setPurchaseVAT] = useState<string>("")
   const [saleVATAmount, setSaleVATAmount] = useState<string>("")
+  const [vatBalance, setVatBalance] = useState<string>("");
   const [discountType, setDiscountType] = useState<"percentage" | "fixed">("percentage")
   const [discountValue, setDiscountValue] = useState<string>("")
   const [maxDiscount, setMaxDiscount] = useState<number>(0)
@@ -64,12 +68,14 @@ const MarginCalculator = () => {
 
   const [chartData, setChartData] = useState<{
     cost: number
-    finalPrice: number
+    netAmountDiscount: number
     profit: number
-    discount: number
+    discountAmount: number
     taxes:number
     vatBalance:number
   } | null>(null)
+
+
 
   const calculateMargin = () => {
     const inputCost = Number.parseFloat(cost.replace(/[^\d.-]/g, ""))
@@ -95,69 +101,88 @@ const MarginCalculator = () => {
         setPurchaseVAT("")
       }
 
-      let sellingPrice = inputCost * (1 + markupValue / 100)
+      let netAmount = inputCost * (1 + markupValue / 100) //Importe Neto Gravado (SObre esto calculo los %)
       let grossProfit: number
-      let finalPrice: number
+      let salePrice: number
       let saleVATAmountValue: number
+
+
+
+      
 
       if (sellWithVAT) {
         if (saleVAT === "customer") {
-          finalPrice = sellingPrice * (1 + saleVatRate)
-          saleVATAmountValue = finalPrice - sellingPrice
+          salePrice = netAmount * (1 + saleVatRate)
+          saleVATAmountValue = netAmount * saleVatRate
           setSaleVATAmount(formatCurrency(saleVATAmountValue))
-          grossProfit = finalPrice - inputCost
+          grossProfit = salePrice - inputCost
         } else {
-          finalPrice = sellingPrice
-          sellingPrice = finalPrice / (1 + saleVatRate)
-          saleVATAmountValue = finalPrice - sellingPrice
+          salePrice = netAmount
+          netAmount = salePrice / (1 + saleVatRate)
+          saleVATAmountValue = netAmount * 0.21
           setSaleVATAmount(formatCurrency(saleVATAmountValue))
-          grossProfit = finalPrice - inputCost
+          grossProfit = salePrice - inputCost
         }
       } else {
-        finalPrice = sellingPrice
+        salePrice = netAmount
         saleVATAmountValue = 0
         setSaleVATAmount("")
-        grossProfit = sellingPrice - inputCost
+        grossProfit = netAmount - inputCost
       }
 
       const perceptionsTotal = perceptions.reduce(
-        (total, perception) => total + (sellingPrice * perception.rate) / 100,
+        (total, perception) => total + (netAmount * perception.rate) / 100,
         0,
       )
-      const internalTaxesTotal = internalTaxes.reduce((total, tax) => total + (sellingPrice * tax.rate) / 100, 0)
+      const internalTaxesTotal = internalTaxes.reduce((total, tax) => total + (netAmount * tax.rate) / 100, 0)
        
       const totalTaxes = Number(perceptionsTotal + internalTaxesTotal)
-      const finalPriceAT = finalPrice - totalTaxes
+      const salePriceAT = salePrice + totalTaxes
 
  
       // Aplicar el descuento
       let discountAmount = 0
       if (discountType === "percentage") {
-        discountAmount = (finalPrice * Number(discountValue)) / 100
+        discountAmount = (netAmount * Number(discountValue)) / 100
       } else {
         discountAmount = Number(discountValue)
       }
 
-      const finalPriceWithDiscount = finalPrice - discountAmount
+      const netAmountDiscount = netAmount - discountAmount;
+      setnetAmountDiscountRaw(netAmountDiscount);
 
-      const vatBalance = purchaseVATValue - saleVATAmountValue
+
+
+
+      // const vatBalance = purchaseVATValue - saleVATAmountValue
+      const IVASale = Number.parseFloat(saleVATAmount.replace(/[^\d.-]/g, "")) || 0;
+      const IVAPurchase = Number.parseFloat(purchaseVAT.replace(/[^\d.-]/g, "")) || 0;
+    
+      const vatBalance = (IVAPurchase - IVASale) / 100 
+      setVatBalance(formatCurrency(vatBalance))
+     
+
       const netProfit = grossProfit + vatBalance - totalTaxes - discountAmount
-      const grossMarginPercentage = (netProfit / finalPriceWithDiscount) * 100
+      const grossMarginPercentage = (netProfit / netAmountDiscount) * 100
+
+      const salePriceDiscount = salePrice - discountAmount
 
 
-      // Calcular el descuento máximo
-      const maxDiscountAmount = finalPriceAT - inputCost + vatBalance
+
+
+      // Calcular el descuento máximo 
+      const maxDiscountAmount = salePrice - inputCost + vatBalance
       setMaxDiscount(maxDiscountAmount)
 
-      const maxDiscountPercentage = (maxDiscountAmount / finalPriceAT) * 100
+      const maxDiscountPercentage = (maxDiscountAmount / salePrice) * 100
       setMaxDiscountPercentage(maxDiscountPercentage)
 
 
       setResults({
-        sellingPrice: formatCurrency(sellingPrice),
+        netAmount: formatCurrency(netAmount),
         grossProfit: formatCurrency(grossProfit),
         grossMarginPercentage: grossMarginPercentage.toFixed(2),
-        finalPrice: formatCurrency(finalPrice),
+        salePrice: formatCurrency(salePrice),
         purchaseVAT: formatCurrency(purchaseVATValue),
         saleVAT: formatCurrency(saleVATAmountValue),
         vatBalance: formatCurrency(vatBalance),
@@ -165,17 +190,18 @@ const MarginCalculator = () => {
         perceptionsTotal: formatCurrency(perceptionsTotal),
         internalTaxesTotal: formatCurrency(internalTaxesTotal),
         totalTaxes: formatCurrency(totalTaxes),
-        finalPriceAT: formatCurrency(finalPriceAT),
-        finalPriceWithDiscount: formatCurrency(finalPriceWithDiscount),
-        discountAmount: formatCurrency(discountAmount),
-        maxDiscountPercentage: maxDiscountPercentage.toFixed(2)
+        salePriceAT: formatCurrency(salePriceAT),
+        netAmountDiscount: formatCurrency(netAmountDiscount),
+        discountAmount:formatCurrency(discountAmount),
+        maxDiscountPercentage: maxDiscountPercentage.toFixed(2),
+        salePriceDiscount: formatCurrency(salePriceDiscount),
       })
       setChartData({
         cost: Number(cost),
-        finalPrice: finalPriceWithDiscount,
+        netAmountDiscount: netAmountDiscount,
         profit: netProfit,
         taxes: totalTaxes,
-        discount: discountAmount,
+        discountAmount: discountAmount,
         vatBalance: Math.abs(vatBalance),
       })
     } else {
@@ -188,37 +214,29 @@ const MarginCalculator = () => {
     }
   }
 
-  const updatePurchaseVAT = (newVatPercentage: string) => {
-    setVatPercentage(newVatPercentage)
+  useEffect(() => {
+    let newPurchaseVAT = 0;
+    let newSaleVAT = 0;
+
     if (includeVAT && cost) {
-      const vatRate =
-        newVatPercentage === "custom"
-          ? Number.parseFloat(newVatPercentage) / 100
-          : Number.parseFloat(newVatPercentage) / 100
-      const costValue = Number.parseFloat(cost.replace(/[^\d.-]/g, ""))
-      const costWithoutVAT = costValue / (1 + vatRate)
-      const vatAmount = costValue - costWithoutVAT
-      setPurchaseVAT(formatCurrency(vatAmount))
-    } else {
-      setPurchaseVAT("")
+        const vatRate = Number.parseFloat(vatPercentage) / 100;
+        const costValue = Number.parseFloat(cost.replace(/[^\d.-]/g, ""));
+        const costWithoutVAT = costValue / (1 + vatRate);
+        newPurchaseVAT = costValue - costWithoutVAT;
     }
-  }
 
-  const updateSaleVAT = (newSaleVatPercentage: string) => {
-    setSaleVatPercentage(newSaleVatPercentage)
-    if (sellWithVAT && results?.sellingPrice) {
-      const vatRate =
-        newSaleVatPercentage === "custom"
-          ? Number.parseFloat(newSaleVatPercentage) / 100
-          : Number.parseFloat(newSaleVatPercentage) / 100
-      const sellingPriceValue = Number.parseFloat(results.finalPriceWithDiscount.replace(/[^\d.-]/g, ""))
-      const vatAmount = calculateVAT(sellingPriceValue, vatRate)
-      setSaleVATAmount(formatCurrency(vatAmount))
-    } else {
-      setSaleVATAmount("")
+    if (sellWithVAT && netAmountDiscountRaw) {
+        const vatRate = Number.parseFloat(saleVatPercentage) / 100;
+        newSaleVAT = calculateVAT(netAmountDiscountRaw, vatRate);
     }
-  }
 
+    setPurchaseVAT(formatCurrency(newPurchaseVAT));
+    setSaleVATAmount(formatCurrency(newSaleVAT));
+    // setVatBalance(newPurchaseVAT - newSaleVAT);
+
+}, [vatPercentage, saleVatPercentage, cost, includeVAT, sellWithVAT, netAmountDiscountRaw]);
+
+  
   useEffect(() => {
     calculateMargin()
   }, [cost, discountType, discountValue])
@@ -306,7 +324,7 @@ const MarginCalculator = () => {
               <div className="space-y-2">
                 <Label className="block text-sm font-medium mb-1">IVA en Compra</Label>
                 <div className="flex items-center space-x-2">
-                  <Select value={vatPercentage} onValueChange={updatePurchaseVAT}>
+                  <Select value={vatPercentage} onValueChange={setVatPercentage}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Seleccione el IVA" />
                     </SelectTrigger>
@@ -364,7 +382,7 @@ const MarginCalculator = () => {
               <div className="space-y-2">
                 <Label className="block text-sm font-medium mb-1">IVA en Venta</Label>
                 <div className="flex items-center space-x-2">
-                  <Select value={saleVatPercentage} onValueChange={updateSaleVAT}>
+                  <Select value={saleVatPercentage} onValueChange={setSaleVatPercentage}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Seleccione el IVA de venta" />
                     </SelectTrigger>
@@ -414,15 +432,15 @@ const MarginCalculator = () => {
 
                 {sellWithVAT ? (
                   <>
-                    <span className="font-medium">Precio de venta (sin IVA):</span>
-                    <span>{results.sellingPrice}</span>
+                    <span className="font-medium">Importe Neto Gravado:</span>
+                    <span>{results.netAmount}</span>
                     <span className="font-medium">Precio final (con IVA):</span>
-                    <span>{results.finalPrice}</span>
+                    <span>{results.salePrice}</span>
                   </>
                 ) : (
                   <>
                     <span className="font-medium">Precio de venta:</span>
-                    <span>{results.sellingPrice}</span>
+                    <span>{results.netAmount}</span>
                   </>
                 )}
 
@@ -430,7 +448,7 @@ const MarginCalculator = () => {
                 <span className=" text-red-500 ">{results.totalTaxes}</span>
 
                 <span className="font-medium">Monto a recibir después de impuestos:</span>
-                <span>{results.finalPriceAT}</span>
+                <span>{results.salePrice}</span>
               </div>
 
               <AdditionalChargesSection
@@ -516,8 +534,10 @@ const MarginCalculator = () => {
               <div className="grid grid-cols-2 gap-2">
                 <span className="font-medium">Descuento aplicado:</span>
                 <span>{results.discountAmount}</span>
+                <span className="font-medium">Importe Neto Gravado con descuento:</span>
+                <span>{results.netAmountDiscount}</span>
                 <span className="font-medium">Monto final a recibir con descuento:</span>
-                <span>{results.finalPriceWithDiscount}</span>
+                <span>{results.salePriceDiscount}</span>
               </div>
             </div>
 
@@ -531,17 +551,20 @@ const MarginCalculator = () => {
                   <span>{purchaseVAT}</span>
                   <span className="font-medium">
                     IVA en la venta (
-                    {saleVatPercentage === "custom" ? `${saleVatPercentage}%` : `${saleVatPercentage}%`}):
+                    {saleVatPercentage === "custom" ? `${saleVatPercentage}%` : `${saleVatPercentage}%`}): 
                   </span>
                   <span>{saleVATAmount}</span>
-                  <span className="font-medium">Balanza de IVA:</span>
-                  <span
-                    className={
-                      Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "text-red-500" : "text-green-600"
-                    }
-                  >
-                    {results.vatBalance}
-                  </span>
+                    <span className="font-medium">Balanza de IVA:</span>
+                    <span
+                      className={
+                        Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0
+                          ? "text-red-500"
+                          : "text-green-600"
+                      }
+                    >
+                      {vatBalance}
+                    </span>
+
                 </div>
               </div>
             )}
@@ -562,7 +585,7 @@ const MarginCalculator = () => {
                 </p>
                 <p>
                   Compras el producto por {formatCurrency(Number(cost.replace(/[^\d.-]/g, "")))} y lo vendes por{" "}
-                  {results.finalPrice}.
+                  {results.salePrice}.
                 </p>
                 <p>
                   Tu ganancia después de impuestos y descuentos, es de {results.netProfit}, que representa el{" "}
@@ -572,7 +595,7 @@ const MarginCalculator = () => {
                   <p className="mt-2">
                     Recuerda que del IVA que cobras en la venta ({saleVATAmount}, al{" "}
                     {saleVatPercentage === "custom" ? `${saleVatPercentage}%` : `${saleVatPercentage}%`}), debes{" "}
-                    {Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "pagar" : "recibir"} {results.vatBalance}{" "}
+                    {Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "pagar" : "recibir"} {vatBalance}{" "}
                     {Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "al" : "del"} gobierno.
                   </p>
                 )}
@@ -584,10 +607,10 @@ const MarginCalculator = () => {
           {results && chartData && (
             <PriceBreakdownChart
               cost={chartData.cost}
-              finalPrice={chartData.finalPrice}
+              netAmountDiscount={chartData.netAmountDiscount}
               profit={chartData.profit}
               totalTaxes={chartData.taxes}
-              discount={chartData.discount}
+              discountAmount={chartData.discountAmount}
               vatBalance={chartData.vatBalance}
             />
           )}
