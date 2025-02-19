@@ -268,145 +268,151 @@ const MarginCalculator = () => {
   }, [perceptions, internalTaxes])
 
   return (
-    <Card className="w-full max-w-[60%] mx-auto">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold text-center">Calculadora de Margen</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-4">
-          <div>
-            <Label htmlFor="cost" className="block text-sm font-medium mb-1">
-              Costo ($)
-            </Label>
-            <div className="flex items-center space-x-2">
-              <NumericFormat
-                id="cost"
-                value={cost}
-                onValueChange={(values) => {
-                  setCost(values.value)
-                  if (includeVAT && vatPercentage) {
-                    const vatRate =
-                      vatPercentage === "custom"
-                        ? Number.parseFloat(vatPercentage) / 100
-                        : Number.parseFloat(vatPercentage) / 100
-                    const costValue = Number.parseFloat(values.value.replace(/[^\d.-]/g, ""))
-                    const costWithoutVAT = costValue / (1 + vatRate)
-                    const vatAmount = costValue - costWithoutVAT
-                    setPurchaseVAT(formatCurrency(vatAmount))
-                  }
-                }}
-                thousandSeparator="."
-                decimalSeparator=","
-                prefix="$"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder="Ingrese el costo"
-              />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-6 w-6 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Ingrese el costo del producto sin IVA</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            {includeVAT && purchaseVAT && (
-              <p className="text-green-600 text-xs mt-1">
-                IVA COMPRA ({vatPercentage === "custom" ? `${vatPercentage}%` : `${vatPercentage}%`}): {purchaseVAT}
-              </p>
-            )}
+<Card className="w-full max-w-full md:max-w-[70%] mx-auto">
+  <CardHeader>
+    <CardTitle className="text-2xl font-bold text-center">Calculadora de Margen</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <form className="space-y-4">
+      <div className="flex flex-col space-y-4 md:grid md:grid-cols-1 gap-4">
+        {/* Primer div: Costo */}
+        <div className="flex flex-col space-y-2">
+          <Label htmlFor="cost" className="block text-sm font-medium mb-1">
+            Costo ($)
+          </Label>
+          <div className="flex items-center space-x-2">
+            <NumericFormat
+              id="cost"
+              value={cost}
+              onValueChange={(values) => {
+                setCost(values.value)
+                if (includeVAT && vatPercentage) {
+                  const vatRate =
+                    vatPercentage === "custom"
+                      ? Number.parseFloat(vatPercentage) / 100
+                      : Number.parseFloat(vatPercentage) / 100
+                  const costValue = Number.parseFloat(values.value.replace(/[^\d.-]/g, ""))
+                  const costWithoutVAT = costValue / (1 + vatRate)
+                  const vatAmount = costValue - costWithoutVAT
+                  setPurchaseVAT(formatCurrency(vatAmount))
+                }
+              }}
+              thousandSeparator="."
+              decimalSeparator=","
+              prefix="$"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder="Ingrese el costo"
+            />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-6 w-6 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Ingrese el costo del producto sin IVA</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
+          {includeVAT && purchaseVAT && (
+            <p className="text-green-600 text-xs mt-1">
+              IVA COMPRA ({vatPercentage === "custom" ? `${vatPercentage}%` : `${vatPercentage}%`}): {purchaseVAT}
+            </p>
+          )}
+        </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="includeVAT"
-                checked={includeVAT}
-                onCheckedChange={(checked) => {
-                  setIncludeVAT(checked as boolean)
-                  if (checked && cost && vatPercentage) {
-                    const vatRate =
-                      vatPercentage === "custom"
-                        ? Number.parseFloat(vatPercentage) / 100
-                        : Number.parseFloat(vatPercentage) / 100
-                    const costValue = Number.parseFloat(cost.replace(/[^\d.-]/g, ""))
-                    const costWithoutVAT = costValue / (1 + vatRate)
-                    const vatAmount = costValue - costWithoutVAT
-                    setPurchaseVAT(formatCurrency(vatAmount))
-                  } else {
-                    setPurchaseVAT("")
-                  }
-                }}
-              />
-              <Label htmlFor="includeVAT">Costo incluye IVA</Label>
-            </div>
-            {includeVAT && (
-              <div className="space-y-2">
-                <Label className="block text-sm font-medium mb-1">IVA en Compra</Label>
-                <div className="flex items-center space-x-2">
-                  <Select value={vatPercentage} onValueChange={setVatPercentage}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Seleccione el IVA" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="2.5">2,5%</SelectItem>
-                      <SelectItem value="5">5%</SelectItem>
-                      <SelectItem value="10.5">10,5%</SelectItem>
-                      <SelectItem value="21">21%</SelectItem>
-                      <SelectItem value="27">27%</SelectItem>
-                      <SelectItem value="0">Exento</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+        {/* Segundo div: Costo incluye IVA */}
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="includeVAT"
+              checked={includeVAT}
+              onCheckedChange={(checked) => {
+                setIncludeVAT(checked as boolean)
+                if (checked && cost && vatPercentage) {
+                  const vatRate =
+                    vatPercentage === "custom"
+                      ? Number.parseFloat(vatPercentage) / 100
+                      : Number.parseFloat(vatPercentage) / 100
+                  const costValue = Number.parseFloat(cost.replace(/[^\d.-]/g, ""))
+                  const costWithoutVAT = costValue / (1 + vatRate)
+                  const vatAmount = costValue - costWithoutVAT
+                  setPurchaseVAT(formatCurrency(vatAmount))
+                } else {
+                  setPurchaseVAT("")
+                }
+              }}
+            />
+            <Label htmlFor="includeVAT">Costo incluye IVA</Label>
+          </div>
+          {includeVAT && (
+            <div className="space-y-2">
+              <Label className="block text-sm font-medium mb-1 ml-6 ">IVA en Compra</Label>
+              <div className="flex items-center space-x-2">
+                <Select value={vatPercentage} onValueChange={setVatPercentage}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Seleccione el IVA" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2.5">2,5%</SelectItem>
+                    <SelectItem value="5">5%</SelectItem>
+                    <SelectItem value="10.5">10,5%</SelectItem>
+                    <SelectItem value="21">21%</SelectItem>
+                    <SelectItem value="27">27%</SelectItem>
+                    <SelectItem value="0">Exento</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label className="block text-sm font-medium mb-1">Método de cálculo</Label>
-            <Select value={marginMethod} onValueChange={(value: "markup" | "marginOnSale") => setMarginMethod(value)}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Seleccione el método de cálculo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="markup">Markup</SelectItem>
-                <SelectItem value="marginOnSale">Margen sobre venta</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="marginValue" className="block text-sm font-medium mb-1">
-              {marginMethod === "markup" ? "MarkUp (%)" : "Margen sobre venta (%)"}
-            </Label>
-            <div className="flex items-center space-x-2">
-              <NumericFormat
-                id="marginValue"
-                value={marginValue}
-                onValueChange={(values) => setMarginValue(values.value)}
-                decimalSeparator=","
-                suffix="%"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                placeholder={`Ingrese el ${marginMethod === "markup" ? "MarkUp" : "Margen sobre venta"}`}
-              />
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-6 w-6 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>
-                      {marginMethod === "markup"
-                        ? "Porcentaje que agregas al costo de un producto para obtener su precio de venta."
-                        : "Porcentaje de margen, calculado sobre el precio de venta."}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
             </div>
+          )}
+        </div>
+
+        {/* Tercer div: Método de cálculo */}
+        <div className="flex flex-col space-y-2">
+          <Label className="block text-sm font-medium mb-1">Método de cálculo</Label>
+          <Select value={marginMethod} onValueChange={(value: "markup" | "marginOnSale") => setMarginMethod(value)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Seleccione el método de cálculo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="markup">Markup</SelectItem>
+              <SelectItem value="marginOnSale">Margen sobre venta</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Cuarto div: MarkUp o Margen sobre venta */}
+        <div className="flex flex-col space-y-2">
+          <Label htmlFor="marginValue" className="block text-sm font-medium mb-1">
+            {marginMethod === "markup" ? "MarkUp (%)" : "Margen sobre venta (%)"}
+          </Label>
+          <div className="flex items-center space-x-2">
+            <NumericFormat
+              id="marginValue"
+              value={marginValue}
+              onValueChange={(values) => setMarginValue(values.value)}
+              decimalSeparator=","
+              suffix="%"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              placeholder={`Ingrese el ${marginMethod === "markup" ? "MarkUp" : "Margen sobre venta"}`}
+            />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-6 w-6 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {marginMethod === "markup"
+                      ? "Porcentaje que agregas al costo de un producto para obtener su precio de venta."
+                      : "Porcentaje de margen, calculado sobre el precio de venta."}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
+        </div>
+      </div>
 
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
@@ -422,7 +428,7 @@ const MarginCalculator = () => {
                 <Label className="block text-sm font-medium mb-1">IVA en Venta</Label>
                 <div className="flex items-center space-x-2">
                   <Select value={saleVatPercentage} onValueChange={setSaleVatPercentage}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Seleccione el IVA de venta" />
                     </SelectTrigger>
                     <SelectContent>
@@ -470,7 +476,7 @@ const MarginCalculator = () => {
           <div className="mt-6 space-y-6">
             <div className="bg-blue-50 p-4 rounded-lg">
               <h3 className="text-lg font-semibold mb-2">Resumen de la Venta</h3>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <span className="font-medium">Costo del producto:</span>
                 <span>{formatCurrency(Number(cost.replace(/[^\d.-]/g, "")))}</span>
 
@@ -612,7 +618,7 @@ const MarginCalculator = () => {
 
             <div className="bg-blue-50 p-4 rounded-lg">
               <h3 className="text-lg font-semibold mb-2">Resumen con Descuento</h3>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <span className="font-medium">Descuento aplicado:</span>
                 <span>{results.discountAmount}</span>
                 <span className="font-medium">Importe Neto Gravado con descuento:</span>
@@ -625,7 +631,7 @@ const MarginCalculator = () => {
             {sellWithVAT && (
               <div className="bg-yellow-50 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold mb-2">Desglose del IVA</h3>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <span className="font-medium">
                     IVA en la compra ({vatPercentage === "custom" ? `${vatPercentage}%` : `${vatPercentage}%`}):
                   </span>
@@ -652,7 +658,7 @@ const MarginCalculator = () => {
 
             <div className="bg-green-50 p-4 rounded-lg">
               <h3 className="text-lg font-semibold mb-2">Ganancias Netas</h3>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <span className="font-medium">Ganancia por venta:</span>
                 <span className="text-green-600">{results.netProfit}</span>
                 <span className="font-medium">Porcentaje de ganancia:</span>

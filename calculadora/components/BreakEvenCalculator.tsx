@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { NumericFormat } from "react-number-format"
+import { Trash2 } from "lucide-react"
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value)
@@ -28,8 +29,10 @@ interface Product {
 
 const BreakEvenCalculator = () => {
   const [fixedCosts, setFixedCosts] = useState<FixedCost[]>([{ id: 1, description: "", amount: "" }])
+  const [hasAddedFixedCost, setHasAddedFixedCost] = useState(false);
+  const [hasAddedProduct, setHasAddedProduct] = useState(false);
   const [products, setProducts] = useState<Product[]>([
-    { id: 1, name: "", variableCost: "", sellingPrice: "", grossMargin: "0%" },
+    { id:1 , name: "", variableCost: "", sellingPrice: "", grossMargin: "0%" },
   ])
   const [results, setResults] = useState<{
     breakEvenPoint: number
@@ -39,19 +42,69 @@ const BreakEvenCalculator = () => {
     averageContributionMarginRatio: number
   } | null>(null)
 
-  const addFixedCost = () => {
-    setFixedCosts([...fixedCosts, { id: fixedCosts.length + 1, description: "", amount: "" }])
-  }
+  const [costResults, setCostResults] =useState<{
+    costResults: string} | null>(null)
 
-  const updateFixedCost = (id: number, field: "description" | "amount", value: string) => {
-    setFixedCosts(fixedCosts.map((cost) => (cost.id === id ? { ...cost, [field]: value } : cost)))
-  }
+    const addFixedCost = () => {
+      setFixedCosts(prevCosts => {
+        // Generar el id dinámicamente según el último elemento
+        const newId = prevCosts.length > 0 ? prevCosts[prevCosts.length - 1].id + 1 : 1;
+    
+        // Agregar el nuevo gasto con id único
+        const newCosts = [...prevCosts, { id: newId, description: "", amount: "" }];
+    
+        // Calcular el total de los costos fijos
+        const totalCost = newCosts.reduce(
+          (sum, cost) => sum + (parseFloat(cost.amount.replace(/[^\d.-]/g, "")) || 0),
+          0
+        );
+    
+        // Actualizar el estado con los costos fijos y el total
+        setCostResults({
+          costResults: formatCurrency(totalCost),  // Formatear el total de costos fijos
+        });
+    
+        return newCosts;
+      });
+    
+      setHasAddedFixedCost(true);
+    };
+    
+    const updateFixedCost = (id: number | null, field: "description" | "amount", value: string) => {
+      setFixedCosts(fixedCosts.map(cost => 
+        cost.id === id && id !== null ? { ...cost, [field]: value } : cost
+      ));
+    };
 
+    
+
+    const removeFixedCost = (id: number) => {
+      const updatedFixedCosts = fixedCosts
+        .filter(cost => cost.id !== id) // Filtrar el costo eliminado
+        .map((cost, index) => ({ ...cost, id: index + 1 })); // Reasignar los ID
+    
+      setFixedCosts(updatedFixedCosts);
+    
+      // Recalcular el total después de eliminar el gasto
+      const costResults = updatedFixedCosts.reduce(
+        (sum, cost) => sum + (parseFloat(cost.amount.replace(/[^\d,-]/g, "").replace(",", ".")) || 0),
+        0
+      );
+    
+      setCostResults({
+        costResults: formatCurrency(costResults),
+      });
+    };
+    
+  
+  
   const addProduct = () => {
     setProducts([
       ...products,
       { id: products.length + 1, name: "", variableCost: "", sellingPrice: "", grossMargin: "0%" },
     ])
+
+
   }
 
   const updateProduct = (id: number, field: "name" | "variableCost" | "sellingPrice", value: string) => {
@@ -71,7 +124,23 @@ const BreakEvenCalculator = () => {
         return product
       }),
     )
+    setHasAddedProduct(true)
   }
+
+  const removeProduct = (id: number) => {
+    // Filtrar el producto a eliminar
+    const updatedProducts = products.filter(product => product.id !== id);
+  
+    // Reasignar IDs para evitar duplicados
+    const reorderedProducts = updatedProducts.map((product, index) => ({
+      ...product,
+      id: index + 1, // Se reasignan los IDs en orden
+    }));
+  
+    setProducts(reorderedProducts);
+  };
+  
+  
 
   const calculateBreakEven = () => {
     const totalFixedCosts = fixedCosts.reduce((sum, cost) => sum + Number(cost.amount.replace(/[^\d.-]/g, "")), 0)
@@ -142,18 +211,28 @@ const BreakEvenCalculator = () => {
                         placeholder="Monto"
                       />
                     </TableCell>
+                    <TableCell>
+                    {hasAddedFixedCost && (
+                    <Button variant="ghost" size="icon" onClick={() => removeFixedCost(cost.id)}>
+                      <Trash2 className="h-12 w-12" />
+                    </Button>
+                            )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
             
-          <Button
-            onClick={addFixedCost}
-            className="mt-2 h-10 text-m font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-[#E24D28] hover:bg-[#A23216] text-white shadow-lg"
-            type="button"
-          >
-              Agregar Gasto Fijo
-            </Button>
+            <div className="flex items-center justify-between mt-2">
+              <Button
+                onClick={addFixedCost}
+                className="h-10 text-m font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-[#E24D28] hover:bg-[#A23216] text-white shadow-lg"
+                type="button"
+              >
+                Agregar Gasto Fijo
+              </Button>
+              <span className="text-m font-semibold">Gastos Fijos Totales: {costResults?.costResults}</span>
+            </div>
           </div>
 
           <div>
@@ -200,6 +279,13 @@ const BreakEvenCalculator = () => {
                       />
                     </TableCell>
                     <TableCell className="text-center">{product.grossMargin}</TableCell>
+                    <TableCell>
+                      {hasAddedProduct && (
+                      <Button variant="ghost" size="icon" onClick={() => removeProduct(product.id)}>
+                        <Trash2 className="h-12 w-12" />
+                      </Button>
+                              )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -252,7 +338,7 @@ const BreakEvenCalculator = () => {
                 </p>
                 <p className="mt-2">
                   En este punto, tus ingresos totales serán de <strong>{results.breakEvenRevenue}</strong>,y tu ganancia de <strong>{results.totalProfit}</strong>, lo que
-                  cubrirá todos tus costos fijos.
+                  cubrirá todos tus costos fijos que son de <strong>{costResults?.costResults}</strong>.
                 </p>
                 <p className="mt-2">
                   Y a partir de este punto de facturación, obtendras ganancias.
@@ -267,4 +353,3 @@ const BreakEvenCalculator = () => {
 }
 
 export default BreakEvenCalculator
-
