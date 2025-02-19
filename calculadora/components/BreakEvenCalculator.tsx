@@ -144,7 +144,7 @@ const BreakEvenCalculator = () => {
 
   const calculateBreakEven = () => {
     const totalFixedCosts = fixedCosts.reduce((sum, cost) => sum + Number(cost.amount.replace(/[^\d.-]/g, "")), 0)
-
+    setCostResults({ costResults: formatCurrency(totalFixedCosts) });
     const productDetails = products.map((product) => ({
       variableCost: Number(product.variableCost.replace(/[^\d.-]/g, "")),
       sellingPrice: Number(product.sellingPrice.replace(/[^\d.-]/g, "")),
@@ -159,9 +159,9 @@ const BreakEvenCalculator = () => {
     const averageContributionMarginRatio =
       productDetails.reduce((sum, product) => sum + product.contributionMarginRatio, 0) / productDetails.length
 
-    const breakEvenPoint = Math.ceil(totalFixedCosts / (totalContributionMargin / products.length))
-    const breakEvenRevenue =
-      breakEvenPoint * (productDetails.reduce((sum, product) => sum + product.sellingPrice, 0) / products.length)
+    const breakEvenRevenue = Math.ceil(totalFixedCosts / averageContributionMarginRatio )
+    const breakEvenPoint =
+    breakEvenRevenue / (productDetails.reduce((sum, product) => sum + product.sellingPrice, 0) / products.length)
     
     const totalProfit = breakEvenRevenue * averageContributionMarginRatio
 
