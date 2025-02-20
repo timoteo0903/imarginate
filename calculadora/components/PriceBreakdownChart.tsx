@@ -6,7 +6,7 @@ interface PriceBreakdownChartProps {
   cost: number
   salePrice: number
   totalTaxes:number
-  profit: number
+  netProfit: number
   discountAmount: number
   vatBalance:number
 }
@@ -15,21 +15,21 @@ interface PriceBreakdownChartProps {
 const PriceBreakdownChart: React.FC<PriceBreakdownChartProps> = ({
   cost,
   salePrice,
-  profit,
+  netProfit,
   discountAmount,
   vatBalance,
   totalTaxes,
 }) => {
   // Calcular los porcentajes en función del precio de venta
   const costPercentage = (cost / salePrice) * 100
-  const profitPercentage = (profit / salePrice) * 100
+  const profitPercentage = (netProfit / salePrice) * 100
   const discountPercentage = (discountAmount / salePrice) * 100
   const vatBalancePercentage = (vatBalance / salePrice) * 100
   const totalTaxesPercentage = (totalTaxes / salePrice) * 100
   
   const data = [
     { name: "Costo", value: costPercentage, label: cost , color: "#1b263b", prefix: "El"},
-    { name: "Ganancia", value: profitPercentage , label: profit, color:"#16a34a", prefix: "La"},
+    { name: "Ganancia", value: profitPercentage , label: netProfit, color:"#16a34a", prefix: "La"},
     { name: "Descuento", value: discountPercentage , label: discountAmount, color: "#ae2012", prefix:"El"},
     { name: "IVA", value: vatBalancePercentage , label: vatBalance, color: "#415a77", prefix: "El"},
     { name: "Tasas y Percepciones", value: totalTaxesPercentage , label: totalTaxes, color: "#ff7d00", prefix: "Las"},
@@ -56,7 +56,7 @@ const PriceBreakdownChart: React.FC<PriceBreakdownChartProps> = ({
               dataKey="value"
               label={({ name, value }) => `${name} ${(value).toFixed(1)}%`}
             >
-              {data.map((entry, index) => (
+              {dataFiltered.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
@@ -71,7 +71,7 @@ const PriceBreakdownChart: React.FC<PriceBreakdownChartProps> = ({
         <div className="mt-4 text-sm text-gray-600">
           {dataFiltered.map((item) => (
             <p key={item.name}>
-              <strong style={{ color: item.color }}>{item.name}: </strong >{item.prefix} {item.name} <strong style={{ color: item.color }}> (${item.label})</strong> representa el <strong style={{ color: item.color }}>{item.value.toFixed(1)}%</strong> del precio de venta.
+              <strong style={{ color: item.color }}>{item.name}: </strong >{item.prefix} {item.name} <strong style={{ color: item.color }}> (${item.label.toFixed(1).replace(".",",")})</strong> representa el <strong style={{ color: item.color }}>{item.value.toFixed(1)}%</strong> del precio de venta.
             </p>
             ))}
         </div>  
