@@ -121,7 +121,6 @@ const MarginCalculator = () => {
           netAmount = inputCost / (1 - marginValueNumber / 100);
         }
       
-      let grossProfit: number
       let salePrice: number
       let saleVATAmountValue: number
 
@@ -182,7 +181,7 @@ const MarginCalculator = () => {
       setVatBalance(formatCurrency(vatBalance))
       
       // Calculo ganancia Neta y Margen de ganancia neta sobre venta
-      grossProfit = salePriceDiscount - inputCost
+      const grossProfit = salePriceDiscount - inputCost
       const netProfit = grossProfit + vatBalance - totalTaxes 
       const grossMarginPercentage = (netProfit / salePriceAT) * 100
       
