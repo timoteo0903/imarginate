@@ -71,7 +71,6 @@ const InstallmentsCalculator = () => {
   const [results, setResults] = useState<InstallmentRow[]>([])
   const [totalSavings, setTotalSavings] = useState<number>(0)
   const [totalRealValue, setTotalRealValue] = useState<number>(0)
-  const [RealValue, setRealValue] = useState<number>(0)
   const [difference, setDifference] = useState<number>(0)
   const [recommendation, setRecommendation] = useState<{
     type: "cuotas" | "contado"
@@ -122,8 +121,6 @@ const InstallmentsCalculator = () => {
     setTotalSavings(accumulatedSavings)
     setTotalRealValue(accumulatedRealValue)
     setCashPrice(cashPrice)
-    let realValue = installmentsPriceNum - accumulatedRealValue
-    setRealValue(realValue)
     setShowFinancedDetails(true)
     let difference = installmentsPriceNum - Number(cashPrice)
     setDifference(difference)
