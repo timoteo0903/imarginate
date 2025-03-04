@@ -122,7 +122,7 @@ const InstallmentsCalculator = () => {
     setTotalRealValue(accumulatedRealValue)
     setCashPrice(cashPrice)
     setShowFinancedDetails(true)
-    let difference = installmentsPriceNum - Number(cashPrice)
+    const difference = installmentsPriceNum - Number(cashPrice)
     setDifference(difference)
 
 
