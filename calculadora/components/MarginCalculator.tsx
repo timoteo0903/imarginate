@@ -68,6 +68,7 @@ const MarginCalculator = () => {
   const [discountValue, setDiscountValue] = useState<string>("")
 
   const [discountPercentage, setDiscountPercentage] = useState<number>(0)
+  const [salePriceAT, setSalePriceAT] = useState<number>(0)
   
 
   //Chart
@@ -155,13 +156,14 @@ const MarginCalculator = () => {
       const internalTaxesTotal = internalTaxes.reduce((total, tax) => total + (netAmount * tax.rate) / 100, 0)
       
       const totalTaxes = Number(perceptionsTotal + internalTaxesTotal)
-      const salePriceAT = salePrice + totalTaxes
+      const salePriceATValue = salePrice - totalTaxes
+      setSalePriceAT(salePriceATValue)
       
       
       // Aplicar el descuento
       let discountAmount = 0
       if (discountType === "percentage") {
-        discountAmount = (salePriceAT * Number(discountValue)) / 100
+        discountAmount = (salePriceATValue * Number(discountValue)) / 100
         setDiscount(discountAmount)
       } else {
         discountAmount = Number(discountValue)
@@ -169,7 +171,7 @@ const MarginCalculator = () => {
       }
       
       
-      const salePriceDiscount = salePrice - discountAmount
+      const salePriceDiscount = salePriceATValue - discountAmount
       setsalePriceDiscount(salePriceDiscount)
       
       
@@ -181,10 +183,9 @@ const MarginCalculator = () => {
       
       // Calculo ganancia Neta y Margen de ganancia neta sobre venta
       const grossProfit = salePriceDiscount - inputCost
-      const netProfit = grossProfit + vatBalance - totalTaxes 
-      const grossMarginPercentage = (netProfit / salePriceAT) * 100
+      const netProfit = grossProfit + vatBalance 
+      const grossMarginPercentage = (netProfit / salePriceATValue) * 100
       
-      console.log(salePrice, inputCost, grossProfit, netProfit, saleVATAmount)
       
       
       
@@ -193,7 +194,7 @@ const MarginCalculator = () => {
       setMaxDiscount(maxDiscountAmount);  
       
       // Calcular el descuento máximo Porcentual  
-      const maxDiscountPercentage = (maxDiscountAmount / salePrice) * 100;
+      const maxDiscountPercentage = (maxDiscountAmount / salePriceATValue) * 100;
       setMaxDiscountPercentage(maxDiscountPercentage);
       
       
@@ -215,7 +216,7 @@ const MarginCalculator = () => {
         perceptionsTotal: formatCurrency(perceptionsTotal),
         internalTaxesTotal: formatCurrency(internalTaxesTotal),
         totalTaxes: formatCurrency(totalTaxes),
-        salePriceAT: formatCurrency(salePriceAT),
+        salePriceAT: formatCurrency(salePriceATValue),
         discount:formatCurrency(discountAmount),
       })
       setChartData({
@@ -255,6 +256,18 @@ const MarginCalculator = () => {
   useEffect(() => {
     calculateMargin()
   }, [perceptions, internalTaxes])
+
+  useEffect(() => {
+    setDiscountValue(discount.toString())
+  }, [discount])
+
+  useEffect(() => {
+    if (salePriceAT > 0) {
+      const maxDiscountAmount = salePriceAT - Number(cost.replace(/[^\d.-]/g, "")) + Number(vatBalance.replace(/[^\d.-]/g, ""));
+      setMaxDiscount(maxDiscountAmount);
+      setMaxDiscountPercentage((maxDiscountAmount / salePriceAT) * 100);
+    }
+  }, [salePriceAT, cost, vatBalance]);
 
   return (
 <Card className="w-full max-w-full md:max-w-[70%] mx-auto">
@@ -489,7 +502,7 @@ const MarginCalculator = () => {
                 <span className=" text-red-500 ">{results.totalTaxes}</span>
 
                 <span className="font-medium">Monto a recibir después de impuestos:</span>
-                <span>{results.salePrice}</span>
+                <span>{results.salePriceAT}</span>
               </div>
 
               <AdditionalChargesSection
