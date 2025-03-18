@@ -57,6 +57,27 @@ const AdditionalChargesSection: React.FC<AdditionalChargesSectionProps> = ({
               <SelectItem value="IIBB - CABA">IIBB - CABA</SelectItem>
               <SelectItem value="IIBB - BUENOS AIRES">IIBB - BUENOS AIRES</SelectItem>
               <SelectItem value="IIBB - CATAMARCA">IIBB - CATAMARCA</SelectItem>
+              <SelectItem value="IIBB - CHACO">IIBB - CHACO</SelectItem>
+              <SelectItem value="IIBB - CHUBUT">IIBB - CHUBUT</SelectItem>
+              <SelectItem value="IIBB - CÓRDOBA">IIBB - CÓRDOBA</SelectItem>
+              <SelectItem value="IIBB - CORRIENTES">IIBB - CORRIENTES</SelectItem>
+              <SelectItem value="IIBB - ENTRE RÍOS">IIBB - ENTRE RÍOS</SelectItem>
+              <SelectItem value="IIBB - FORMOSA">IIBB - FORMOSA</SelectItem>
+              <SelectItem value="IIBB - JUJUY">IIBB - JUJUY</SelectItem>
+              <SelectItem value="IIBB - LA PAMPA">IIBB - LA PAMPA</SelectItem>
+              <SelectItem value="IIBB - LA RIOJA">IIBB - LA RIOJA</SelectItem>
+              <SelectItem value="IIBB - MENDOZA">IIBB - MENDOZA</SelectItem>
+              <SelectItem value="IIBB - MISIONES">IIBB - MISIONES</SelectItem>
+              <SelectItem value="IIBB - NEUQUÉN">IIBB - NEUQUÉN</SelectItem>
+              <SelectItem value="IIBB - RÍO NEGRO">IIBB - RÍO NEGRO</SelectItem>
+              <SelectItem value="IIBB - SALTA">IIBB - SALTA</SelectItem>
+              <SelectItem value="IIBB - SAN JUAN">IIBB - SAN JUAN</SelectItem>
+              <SelectItem value="IIBB - SAN LUIS">IIBB - SAN LUIS</SelectItem>
+              <SelectItem value="IIBB - SANTA CRUZ">IIBB - SANTA CRUZ</SelectItem>
+              <SelectItem value="IIBB - SANTA FE">IIBB - SANTA FE</SelectItem>
+              <SelectItem value="IIBB - SANTIAGO DEL ESTERO">IIBB - SANTIAGO DEL ESTERO</SelectItem>
+              <SelectItem value="IIBB - TIERRA DEL FUEGO">IIBB - TIERRA DEL FUEGO</SelectItem>
+              <SelectItem value="IIBB - TUCUMÁN">IIBB - TUCUMÁN</SelectItem>
             </SelectContent>
           </Select>
           <NumericFormat
