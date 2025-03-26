@@ -14,9 +14,10 @@ import { Info, Percent, DollarSign } from "lucide-react"
 import AdditionalChargesSection from "./AdditionalChargesSection"
 import { Switch } from "@/components/ui/switch"
 import PriceBreakdownChart from "./PriceBreakdownChart"
+import CostBreakdownSection, { type CostComponent } from "./CostBreakdownSection"
+import { AnimatePresence } from "framer-motion"
 
-
-const formatCurrency = (value: number) => {
+export const formatCurrency = (value: number) => {
   return new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(value)
 }
 
@@ -29,8 +30,11 @@ interface AdditionalCharge {
   rate: number
 }
 
-
 const MarginCalculator = () => {
+  // Cost breakdown state
+  const [costComponents, setCostComponents] = useState<CostComponent[]>([])
+
+  // Original calculator state
   const [cost, setCost] = useState("")
   const [includeVAT, setIncludeVAT] = useState(false)
   const [marginMethod, setMarginMethod] = useState<"markup" | "marginOnSale">("markup")
@@ -41,11 +45,11 @@ const MarginCalculator = () => {
   const [saleVatPercentage, setSaleVatPercentage] = useState("21")
   const [perceptions, setPerceptions] = useState<AdditionalCharge[]>([])
   const [internalTaxes, setInternalTaxes] = useState<AdditionalCharge[]>([])
-  const [discount, setDiscount] = useState<number>(0);
-  const [salePriceDiscount, setsalePriceDiscount] = useState<number>(0);
-  const [netAmountDiscount, setnetAmountDiscount] = useState<number>(0);
+  const [discount, setDiscount] = useState<number>(0)
+  const [salePriceDiscount, setSalePriceDiscount] = useState<number>(0)
+  const [netAmountDiscount, setNetAmountDiscount] = useState<number>(0)
   const [maxDiscount, setMaxDiscount] = useState<number>(0)
-  const [maxDiscountPercentage,setMaxDiscountPercentage] = useState<number>(0)
+  const [maxDiscountPercentage, setMaxDiscountPercentage] = useState<number>(0)
   const [results, setResults] = useState<{
     netAmount: string
     grossProfit: string
@@ -63,30 +67,42 @@ const MarginCalculator = () => {
   } | null>(null)
   const [purchaseVAT, setPurchaseVAT] = useState<number>(0)
   const [saleVATAmount, setSaleVATAmount] = useState<number>(0)
-  const [vatBalance, setVatBalance] = useState<string>("");
+  const [vatBalance, setVatBalance] = useState<string>("")
   const [discountType, setDiscountType] = useState<"percentage" | "fixed">("percentage")
   const [discountValue, setDiscountValue] = useState<string>("")
-
   const [discountPercentage, setDiscountPercentage] = useState<number>(0)
-  
 
-  //Chart
+  // Chart data
   const [chartData, setChartData] = useState<{
     cost: number
     salePrice: number
     netProfit: number
     discountAmount: number
-    taxes:number
-    vatBalance:number
+    taxes: number
+    vatBalance: number
+    costBreakdown?: { name: string; value: number }[]
   } | null>(null)
 
+  // Update total cost from cost components
+  const updateTotalCost = () => {
+    if (costComponents.length > 0) {
+      const totalCost = costComponents.reduce((sum, component) => sum + component.netAmount + component.vatAmount, 0)
+      setCost(totalCost.toString())
+    }
+  }
 
+  useEffect(() => {
+    updateTotalCost()
+  }, [costComponents])
+
+  // In the MarginCalculator component, add a function to handle VAT updates
+  const handleVATChange = (totalVAT: number) => {
+    setPurchaseVAT(totalVAT)
+  }
 
   const calculateMargin = () => {
     const inputCost = Number.parseFloat(cost.replace(/[^\d.-]/g, ""))
     const marginValueNumber = Number.parseFloat(marginValue)
-    const vatRate =
-      vatPercentage === "custom" ? Number.parseFloat(vatPercentage) / 100 : Number.parseFloat(vatPercentage) / 100
     const saleVatRate =
       saleVatPercentage === "custom"
         ? Number.parseFloat(saleVatPercentage) / 100
@@ -97,49 +113,34 @@ const MarginCalculator = () => {
       setResults(null)
       setChartData(null)
       return
-    }    
+    }
 
     if (inputCost && marginValueNumber) {
-      let costWithoutVAT: number
-      let purchaseVATValue: number
+      // Use the purchaseVAT value directly from state
+      const purchaseVATValue = purchaseVAT
 
-      if (includeVAT) {
-        costWithoutVAT = inputCost / (1 + vatRate)
-        purchaseVATValue = calculateVAT(costWithoutVAT, vatRate)
-        setPurchaseVAT(purchaseVATValue)
+      let netAmount: number // Importe Neto Gravado (Sobre esto calculo los %)
+      if (marginMethod === "markup") {
+        netAmount = inputCost * (1 + marginValueNumber / 100)
       } else {
-        costWithoutVAT = inputCost
-        purchaseVATValue = 0
-        setPurchaseVAT(0)
+        netAmount = inputCost / (1 - marginValueNumber / 100)
       }
 
-      let netAmount: number //Importe Neto Gravado (SObre esto calculo los %)
-      if (marginMethod === "markup") {
-        netAmount = inputCost * (1 + marginValueNumber / 100);
-      } 
-      else {
-          netAmount = inputCost / (1 - marginValueNumber / 100);
-        }
-      
       let salePrice: number
       let saleVATAmountValue: number
-
-
-
-      
 
       if (sellWithVAT) {
         if (saleVAT === "customer") {
           salePrice = netAmount * (1 + saleVatRate)
           saleVATAmountValue = netAmount * saleVatRate
           setSaleVATAmount(saleVATAmountValue)
-          setnetAmountDiscount(netAmount)
+          setNetAmountDiscount(netAmount)
         } else {
           salePrice = netAmount
           netAmount = salePrice / (1 + saleVatRate)
           saleVATAmountValue = netAmount * saleVatRate
           setSaleVATAmount(saleVATAmountValue)
-          setnetAmountDiscount(salePrice)
+          setNetAmountDiscount(salePrice)
         }
       } else {
         salePrice = netAmount
@@ -147,17 +148,12 @@ const MarginCalculator = () => {
         setSaleVATAmount(0)
       }
 
-      
-      const perceptionsTotal = perceptions.reduce(
-        (total, perception) => total + (netAmount * perception.rate) / 100,
-        0,
-      )
-      const internalTaxesTotal = internalTaxes.reduce((total, tax) => total + (netAmount * tax.rate) / 100, 0)
-      
+      const perceptionsTotal = perceptions.reduce((total, perception) => total + (salePrice * perception.rate) / 100, 0)
+      const internalTaxesTotal = internalTaxes.reduce((total, tax) => total + (salePrice * tax.rate) / 100, 0)
+
       const totalTaxes = Number(perceptionsTotal + internalTaxesTotal)
       const salePriceAT = salePrice + totalTaxes
-      
-      
+
       // Aplicar el descuento
       let discountAmount = 0
       if (discountType === "percentage") {
@@ -167,42 +163,35 @@ const MarginCalculator = () => {
         discountAmount = Number(discountValue)
         setDiscount(discountAmount)
       }
-      
-      
-      const salePriceDiscount = salePrice - discountAmount
-      setsalePriceDiscount(salePriceDiscount)
-      
-      
-      // Calculamos el IVA 
-      const IVASale = saleVATAmount
-      const IVAPurchase = purchaseVAT
 
-      const vatBalance = (IVAPurchase - IVASale)
-      
+      const salePriceDiscount = salePrice - discountAmount
+      setSalePriceDiscount(salePriceDiscount)
+
+      // Calculamos el IVA
+      const IVASale = saleVATAmount
+      const IVAPurchase = purchaseVATValue
+
+      const vatBalance = IVAPurchase - IVASale
+
       // Calculo ganancia Neta y Margen de ganancia neta sobre venta
       const grossProfit = salePriceDiscount - inputCost
-      const netProfit = grossProfit + vatBalance - totalTaxes 
+      const netProfit = grossProfit + vatBalance - totalTaxes
       const grossMarginPercentage = (netProfit / salePriceAT) * 100
-      
-      console.log(salePrice, inputCost, grossProfit, netProfit, saleVATAmount)
-      
-      
-      
-      // Calcular el descuento máximo  
-      const maxDiscountAmount = salePrice - inputCost + vatBalance;
-      setMaxDiscount(maxDiscountAmount);  
-      
-      // Calcular el descuento máximo Porcentual  
-      const maxDiscountPercentage = (maxDiscountAmount / salePrice) * 100;
-      setMaxDiscountPercentage(maxDiscountPercentage);
-      
-      
-      // Descuento que se ha hecho  
-      const discountPercentage = discountAmount > 0 ? (discountAmount / maxDiscount) * 100 : 0;
-      setDiscountPercentage(discountPercentage);
-      
+
+      // Calcular el descuento máximo
+      const maxDiscountAmount = salePrice - inputCost + vatBalance
+      setMaxDiscount(maxDiscountAmount)
+
+      // Calcular el descuento máximo Porcentual
+      const maxDiscountPercentage = (maxDiscountAmount / salePrice) * 100
+      setMaxDiscountPercentage(maxDiscountPercentage)
+
+      // Descuento que se ha hecho
+      const discountPercentage = discountAmount > 0 ? (discountAmount / maxDiscount) * 100 : 0
+      setDiscountPercentage(discountPercentage)
+
       setVatBalance(formatCurrency(vatBalance))
-      
+
       setResults({
         netAmount: formatCurrency(netAmount),
         grossProfit: formatCurrency(grossProfit),
@@ -216,8 +205,18 @@ const MarginCalculator = () => {
         internalTaxesTotal: formatCurrency(internalTaxesTotal),
         totalTaxes: formatCurrency(totalTaxes),
         salePriceAT: formatCurrency(salePriceAT),
-        discount:formatCurrency(discountAmount),
+        discount: formatCurrency(discountAmount),
       })
+
+      // Prepare cost breakdown data for chart
+      const costBreakdownData =
+        costComponents.length > 0
+          ? costComponents.map((component) => ({
+              name: component.name,
+              value: component.netAmount + component.vatAmount,
+            }))
+          : undefined
+
       setChartData({
         cost: Number(cost),
         salePrice: salePrice,
@@ -225,6 +224,7 @@ const MarginCalculator = () => {
         taxes: totalTaxes,
         discountAmount: discountAmount,
         vatBalance: Math.abs(vatBalance),
+        costBreakdown: costBreakdownData,
       })
     } else {
       setResults(null)
@@ -236,173 +236,93 @@ const MarginCalculator = () => {
 
   // Si se aplica un descuento hay que recalcular el IVA Venta
   useEffect(() => {
-    let newSaleVAT = 0;
+    let newSaleVAT = 0
     if (sellWithVAT && discount) {
-      const saleVat = Number.parseFloat(saleVatPercentage) / 100;
-      newSaleVAT = calculateVAT(salePriceDiscount, saleVat);
-          setSaleVATAmount(newSaleVAT);
-          const netAmountDiscount = salePriceDiscount / (1 + saleVat); //Actualizamos Neto Gravado post descuentos
-          setnetAmountDiscount(netAmountDiscount);
-      }
-  }, [vatPercentage, saleVatPercentage, cost, includeVAT, sellWithVAT, discount, vatBalance]);
+      const saleVat = Number.parseFloat(saleVatPercentage) / 100
+      newSaleVAT = calculateVAT(salePriceDiscount, saleVat)
+      setSaleVATAmount(newSaleVAT)
+      const netAmountDiscount = salePriceDiscount / (1 + saleVat) // Actualizamos Neto Gravado post descuentos
+      setNetAmountDiscount(netAmountDiscount)
+    }
+  }, [vatPercentage, saleVatPercentage, cost, includeVAT, sellWithVAT, discount, vatBalance])
 
-
-  
   useEffect(() => {
     calculateMargin()
-  }, [cost, discountType, discountValue, vatBalance])
+  }, [cost, discountType, discount, vatBalance])
 
   useEffect(() => {
     calculateMargin()
   }, [perceptions, internalTaxes])
 
   return (
-<Card className="w-full max-w-full md:max-w-[70%] mx-auto">
-  <CardHeader>
-    <CardTitle className="text-2xl font-bold text-center">Calculadora de Margen</CardTitle>
-  </CardHeader>
-  <CardContent>
-    <form className="space-y-4">
-      <div className="flex flex-col space-y-4 md:grid md:grid-cols-1 gap-4">
-        {/* Primer div: Costo */}
-        <div className="flex flex-col space-y-2">
-          <Label htmlFor="cost" className="block text-sm font-medium mb-1">
-            Costo ($)
-          </Label>
-          <div className="flex items-center space-x-2">
-            <NumericFormat
-              id="cost"
-              value={cost}
-              onValueChange={(values) => {
-                setCost(values.value)
-                if (includeVAT && vatPercentage) {
-                  const vatRate =
-                    vatPercentage === "custom"
-                      ? Number.parseFloat(vatPercentage) / 100
-                      : Number.parseFloat(vatPercentage) / 100
-                  const costValue = Number.parseFloat(values.value.replace(/[^\d.-]/g, ""))
-                  const costWithoutVAT = costValue / (1 + vatRate)
-                  const vatAmount = costValue - costWithoutVAT
-                  setPurchaseVAT(vatAmount)
-                }
-              }}
-              thousandSeparator="."
-              decimalSeparator=","
-              prefix="$"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder="Ingrese el costo"
-            />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="h-6 w-6 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Ingrese el costo del producto sin IVA</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          {includeVAT && purchaseVAT && (
-            <p className="text-green-600 text-xs mt-1">
-              IVA COMPRA ({vatPercentage === "custom" ? `${vatPercentage}%` : `${vatPercentage}%`}): formatCurrency{purchaseVAT}
-            </p>
-          )}
-        </div>
+    <Card className="w-full max-w-full md:max-w-[70%] mx-auto">
+      <CardHeader>
+        <CardTitle className="text-2xl font-bold text-center">Calculadora de Margen</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="mb-4"></div>
 
-        {/* Segundo div: Costo incluye IVA */}
-        <div className="flex flex-col space-y-2">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="includeVAT"
-              checked={includeVAT}
-              onCheckedChange={(checked) => {
-                setIncludeVAT(checked as boolean)
-                if (checked && cost && vatPercentage) {
-                  const vatRate =
-                    vatPercentage === "custom"
-                      ? Number.parseFloat(vatPercentage) / 100
-                      : Number.parseFloat(vatPercentage) / 100
-                  const costValue = Number.parseFloat(cost.replace(/[^\d.-]/g, ""))
-                  const costWithoutVAT = costValue / (1 + vatRate)
-                  const vatAmount = costValue - costWithoutVAT
-                  setPurchaseVAT(vatAmount)
-                } else {
-                  setPurchaseVAT(0)
-                }
-              }}
+        <AnimatePresence></AnimatePresence>
+
+        <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+          <div className="flex flex-col space-y-4 md:grid md:grid-cols-1 gap-4">
+            {/* Cost breakdown is now the primary cost input method */}
+            <CostBreakdownSection
+              costComponents={costComponents}
+              setCostComponents={setCostComponents}
+              vatPercentage={vatPercentage}
+              totalCost={Number(cost.replace(/[^\d.-]/g, "")) || 0}
+              formatCurrency={formatCurrency}
+              updateTotalCost={updateTotalCost}
+              onVATChange={handleVATChange}
             />
-            <Label htmlFor="includeVAT">Costo incluye IVA</Label>
-          </div>
-          {includeVAT && (
-            <div className="space-y-2">
-              <Label className="block text-sm font-medium mb-1 ml-6 ">IVA en Compra</Label>
+
+            {/* Tercer div: Método de cálculo */}
+            <div className="flex flex-col space-y-2">
+              <Label className="block text-sm font-medium mb-1">Método de cálculo</Label>
+              <Select value={marginMethod} onValueChange={(value: "markup" | "marginOnSale") => setMarginMethod(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Seleccione el método de cálculo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="markup">Markup</SelectItem>
+                  <SelectItem value="marginOnSale">Margen sobre venta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Cuarto div: MarkUp o Margen sobre venta */}
+            <div className="flex flex-col space-y-2">
+              <Label htmlFor="marginValue" className="block text-sm font-medium mb-1">
+                {marginMethod === "markup" ? "MarkUp (%)" : "Margen sobre venta (%)"}
+              </Label>
               <div className="flex items-center space-x-2">
-                <Select value={vatPercentage} onValueChange={setVatPercentage}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Seleccione el IVA" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2.5">2,5%</SelectItem>
-                    <SelectItem value="5">5%</SelectItem>
-                    <SelectItem value="10.5">10,5%</SelectItem>
-                    <SelectItem value="19">19%</SelectItem>
-                    <SelectItem value="21">21%</SelectItem>
-                    <SelectItem value="27">27%</SelectItem>
-                    <SelectItem value="0">Exento</SelectItem>
-                  </SelectContent>
-                </Select>
+                <NumericFormat
+                  id="marginValue"
+                  value={marginValue}
+                  onValueChange={(values) => setMarginValue(values.value)}
+                  decimalSeparator=","
+                  suffix="%"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  placeholder={`Ingrese el ${marginMethod === "markup" ? "MarkUp" : "Margen sobre venta"}`}
+                />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="h-6 w-6 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {marginMethod === "markup"
+                          ? "Porcentaje que agregas al costo de un producto para obtener su precio de venta."
+                          : "Porcentaje de margen, calculado sobre el precio de venta."}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
-          )}
-        </div>
-
-        {/* Tercer div: Método de cálculo */}
-        <div className="flex flex-col space-y-2">
-          <Label className="block text-sm font-medium mb-1">Método de cálculo</Label>
-          <Select value={marginMethod} onValueChange={(value: "markup" | "marginOnSale") => setMarginMethod(value)}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Seleccione el método de cálculo" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="markup">Markup</SelectItem>
-              <SelectItem value="marginOnSale">Margen sobre venta</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Cuarto div: MarkUp o Margen sobre venta */}
-        <div className="flex flex-col space-y-2">
-          <Label htmlFor="marginValue" className="block text-sm font-medium mb-1">
-            {marginMethod === "markup" ? "MarkUp (%)" : "Margen sobre venta (%)"}
-          </Label>
-          <div className="flex items-center space-x-2">
-            <NumericFormat
-              id="marginValue"
-              value={marginValue}
-              onValueChange={(values) => setMarginValue(values.value)}
-              decimalSeparator=","
-              suffix="%"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              placeholder={`Ingrese el ${marginMethod === "markup" ? "MarkUp" : "Margen sobre venta"}`}
-            />
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="h-6 w-6 text-muted-foreground hover:text-[#1f2b3e] cursor-pointer" />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>
-                    {marginMethod === "markup"
-                      ? "Porcentaje que agregas al costo de un producto para obtener su precio de venta."
-                      : "Porcentaje de margen, calculado sobre el precio de venta."}
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
-        </div>
-      </div>
 
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
@@ -452,10 +372,12 @@ const MarginCalculator = () => {
               </div>
             )}
           </div>
-          
 
           <Button
-            onClick={calculateMargin}
+            onClick={(e) => {
+              e.preventDefault()
+              calculateMargin()
+            }}
             className="w-full h-10 text-lg font-semibold transition-all duration-300 ease-in-out transform hover:scale-105 bg-gray-800 hover:bg-gray-700 text-white shadow-lg"
             type="button"
           >
@@ -528,7 +450,7 @@ const MarginCalculator = () => {
                   setInternalTaxes([...internalTaxes, { name: "", rate: 0 }])
                 }}
               />
-                <div className="mt-4">
+              <div className="mt-4">
                 <h4 className="font-semibold mb-2">Descuento</h4>
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
@@ -605,11 +527,11 @@ const MarginCalculator = () => {
               </div>
             </div>
 
-
-
             <div className="bg-blue-50 p-4 rounded-lg">
               <h3 className="text-lg font-semibold mb-2">Resumen con Descuento</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <span className="font-medium">Costo del producto:</span>
+                <span>{formatCurrency(Number(cost.replace(/[^\d.-]/g, "")))}</span>
                 <span className="font-medium">Descuento aplicado:</span>
                 <span>{formatCurrency(discount)}</span>
                 <span className="font-medium">Importe Neto Gravado con descuento:</span>
@@ -623,26 +545,20 @@ const MarginCalculator = () => {
               <div className="bg-yellow-50 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold mb-2">Desglose del IVA</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <span className="font-medium">
-                    IVA en la compra ({vatPercentage === "custom" ? `${vatPercentage}%` : `${vatPercentage}%`}):
-                  </span>
+                  <span className="font-medium">IVA compra:</span>
                   <span>{formatCurrency(purchaseVAT)}</span>
                   <span className="font-medium">
-                    IVA en la venta (
-                    {saleVatPercentage === "custom" ? `${saleVatPercentage}%` : `${saleVatPercentage}%`}): 
+                    IVA venta:
                   </span>
                   <span>{formatCurrency(saleVATAmount)}</span>
-                    <span className="font-medium">Balanza de IVA:</span>
-                    <span
-                      className={
-                        Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0
-                          ? "text-red-500"
-                          : "text-green-600"
-                      }
-                    >
-                      {vatBalance}
-                    </span>
-
+                  <span className="font-medium">Balanza de IVA:</span>
+                  <span
+                    className={
+                      Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "text-red-500" : "text-green-600"
+                    }
+                  >
+                    {vatBalance}
+                  </span>
                 </div>
               </div>
             )}
@@ -665,46 +581,51 @@ const MarginCalculator = () => {
                   Compras el producto por {formatCurrency(Number(cost.replace(/[^\d.-]/g, "")))} y lo vendes por{" "}
                   {results.salePrice}.
                 </p>
-                <p>
-                  { Number(results.netProfit.replace(/[^\d.-]/g, "")) < 0 
-                  ? <>
-                      <strong style={{ color: "red" }}>Estás perdiendo plata</strong>, por cada venta estás perdiendo{" "}
-                      <strong style={{ color: "red" }}>{results.netProfit}</strong>.
-                    </>
-                   :
-                    <>
-                      Tu ganancia después de impuestos y descuentos, es de <strong style={{ color: "green" }}>{results.netProfit}</strong>., que representa el{" "}
-                      {results.grossMarginPercentage}% del precio de venta.
-                    </>
-                  }
-                </p>
-
-                {sellWithVAT && (
-                  <p className="mt-2">
+                                {sellWithVAT && (
+                  <p >
                     Recuerda que del IVA que cobras en la venta ({formatCurrency(saleVATAmount)}, al{" "}
                     {saleVatPercentage === "custom" ? `${saleVatPercentage}%` : `${saleVatPercentage}%`}), debes{" "}
-                    {Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "pagar" : "recibir"} <strong style={{color : "red"}}> {vatBalance}</strong>{" "}
+                    {Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "pagar" : "recibir"}{" "}
+                    <strong style={{ color: "red" }}> {vatBalance}</strong>{" "}
                     {Number(results.vatBalance.replace(/[^\d.-]/g, "")) < 0 ? "al" : "del"} gobierno.
                   </p>
                 )}
+                <p>
+                  {Number(results.netProfit.replace(/[^\d.-]/g, "")) < 0 ? (
+                    <>
+                      <strong style={{ color: "red" }}>Estás perdiendo plata</strong>, por cada venta estás perdiendo{" "}
+                      <strong style={{ color: "red" }}>{results.netProfit}</strong>.
+                    </>
+                  ) : (
+                    <>
+                      Tu ganancia después de impuestos y descuentos, es de{" "}
+                      <strong style={{ color: "green" }}>{results.netProfit}</strong>., que representa el{" "}
+                      {results.grossMarginPercentage}% del precio de venta.
+                    </>
+                  )}
+                </p>
+
+
               </AlertDescription>
             </Alert>
           </div>
         )}
 
-          {results && chartData && (
+        {results && chartData && (
+          <>
             <PriceBreakdownChart
-              cost={chartData.cost}
-              salePrice={chartData.salePrice}
-              netProfit={chartData.netProfit}
-              totalTaxes={chartData.taxes}
-              discountAmount={chartData.discountAmount}
               vatBalance={chartData.vatBalance}
+              cost={chartData.cost}
+              profit={chartData.netProfit}
+              discount={chartData.discountAmount}
+              costBreakdown={chartData.costBreakdown}
             />
-          )}
+          </>
+        )}
       </CardContent>
     </Card>
   )
 }
 
 export default MarginCalculator
+

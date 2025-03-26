@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { NumericFormat } from "react-number-format"
 import { Trash2 } from "lucide-react"
+import { formatCurrency } from "./MarginCalculator"
 
 interface AdditionalCharge {
   name: string
@@ -20,7 +21,7 @@ interface AdditionalChargesSectionProps {
   addPerception: () => void
   addInternalTax: () => void
   results: {
-    netAmount: string
+    salePrice: string
   } | null
   formatCurrency: (value: number) => string
 }
@@ -48,15 +49,36 @@ const AdditionalChargesSection: React.FC<AdditionalChargesSectionProps> = ({
     <h4 className="font-semibold mb-2">Percepciones</h4>
     {perceptions.length > 0 ? (
       perceptions.map((perception, index) => (
-        <div key={index} className="flex items-center space-x-3 mb-2 w-full">
+        <div key={index} className="flex items-center space-x-3 mb-2 w-full ">
           <Select value={perception.name} onValueChange={(value) => updatePerception(index, "name", value)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Seleccione" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[200px] overflow-y-auto">
               <SelectItem value="IIBB - CABA">IIBB - CABA</SelectItem>
               <SelectItem value="IIBB - BUENOS AIRES">IIBB - BUENOS AIRES</SelectItem>
               <SelectItem value="IIBB - CATAMARCA">IIBB - CATAMARCA</SelectItem>
+              <SelectItem value="IIBB - CHACO">IIBB - CHACO</SelectItem>
+              <SelectItem value="IIBB - CHUBUT">IIBB - CHUBUT</SelectItem>
+              <SelectItem value="IIBB - CÓRDOBA">IIBB - CÓRDOBA</SelectItem>
+              <SelectItem value="IIBB - CORRIENTES">IIBB - CORRIENTES</SelectItem>
+              <SelectItem value="IIBB - ENTRE RÍOS">IIBB - ENTRE RÍOS</SelectItem>
+              <SelectItem value="IIBB - FORMOSA">IIBB - FORMOSA</SelectItem>
+              <SelectItem value="IIBB - JUJUY">IIBB - JUJUY</SelectItem>
+              <SelectItem value="IIBB - LA PAMPA">IIBB - LA PAMPA</SelectItem>
+              <SelectItem value="IIBB - LA RIOJA">IIBB - LA RIOJA</SelectItem>
+              <SelectItem value="IIBB - MENDOZA">IIBB - MENDOZA</SelectItem>
+              <SelectItem value="IIBB - MISIONES">IIBB - MISIONES</SelectItem>
+              <SelectItem value="IIBB - NEUQUÉN">IIBB - NEUQUÉN</SelectItem>
+              <SelectItem value="IIBB - RÍO NEGRO">IIBB - RÍO NEGRO</SelectItem>
+              <SelectItem value="IIBB - SALTA">IIBB - SALTA</SelectItem>
+              <SelectItem value="IIBB - SAN JUAN">IIBB - SAN JUAN</SelectItem>
+              <SelectItem value="IIBB - SAN LUIS">IIBB - SAN LUIS</SelectItem>
+              <SelectItem value="IIBB - SANTA CRUZ">IIBB - SANTA CRUZ</SelectItem>
+              <SelectItem value="IIBB - SANTA FE">IIBB - SANTA FE</SelectItem>
+              <SelectItem value="IIBB - SANTIAGO DEL ESTERO">IIBB - SANTIAGO DEL ESTERO</SelectItem>
+              <SelectItem value="IIBB - TIERRA DEL FUEGO">IIBB - TIERRA DEL FUEGO</SelectItem>
+              <SelectItem value="IIBB - TUCUMÁN">IIBB - TUCUMÁN</SelectItem>
             </SelectContent>
           </Select>
           <NumericFormat
@@ -69,7 +91,7 @@ const AdditionalChargesSection: React.FC<AdditionalChargesSectionProps> = ({
           {results && (
             <span className="w-15">
               {formatCurrency(
-                Number(results.netAmount.replace(/[^\d,-]/g, "").replace(",", ".")) *
+                Number(results.salePrice.replace(/[^\d,-]/g, "").replace(",", ".")) *
                   (perception.rate / 100),
               )}
             </span>
@@ -112,7 +134,7 @@ const AdditionalChargesSection: React.FC<AdditionalChargesSectionProps> = ({
           {results && (
             <span className="w-15">
               {formatCurrency(
-                Number(results.netAmount.replace(/[^\d,-]/g, "").replace(",", ".")) * (tax.rate / 100),
+                Number(results.salePrice.replace(/[^\d,-]/g, "").replace(",", ".")) * (tax.rate / 100),
               )}
             </span>
           )}
