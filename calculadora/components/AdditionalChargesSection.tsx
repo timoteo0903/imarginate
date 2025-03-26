@@ -4,7 +4,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { NumericFormat } from "react-number-format"
 import { Trash2 } from "lucide-react"
-import { formatCurrency } from "./MarginCalculator"
 
 interface AdditionalCharge {
   name: string

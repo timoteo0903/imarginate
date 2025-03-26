@@ -146,7 +146,7 @@ const PriceBreakdownChart: React.FC<PriceBreakdownChartProps> = ({
               ))}
             </Pie>
             <Tooltip
-              formatter={(value, name) => [formatCurrency(value), name]}
+              formatter={(value, name) => [formatCurrency(Number(value)), name]}
               contentStyle={{ backgroundColor: "white", borderRadius: "8px", border: "1px solid #ccc" }}
             />
             <Legend />

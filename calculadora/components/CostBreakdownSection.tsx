@@ -12,7 +12,7 @@ import { NumericFormat } from "react-number-format"
 import { Trash2, Plus, DollarSign } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-interface CostComponent {
+export interface CostComponent {
   id: string
   name: string
   amount: string
