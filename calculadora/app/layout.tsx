@@ -1,16 +1,16 @@
 import "./globals.css"
-import { Analytics } from '@vercel/analytics/next';
-
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import Footer from "@/components/footer"
-import type React from "react" // Added import for React
+import type React from "react"
 
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Imarginante",  
-  description: "Calcula márgenes y puntos de equilibrio fácilmente"
+  title: "Calculadora Financiera Pro | Herramientas para decisiones financieras",
+  description:
+    "Optimiza tus decisiones financieras con nuestras calculadoras de margen, punto de equilibrio y comparación de financiamiento.",
+  keywords: "calculadora financiera, margen, punto de equilibrio, finanzas, cuotas, contado",
 }
 
 export default function RootLayout({
@@ -23,11 +23,13 @@ export default function RootLayout({
       <body className={inter.className}>
         <div className="flex flex-col min-h-screen">
           <main className="flex-grow">{children}</main>
-          <Analytics />
           <Footer />
         </div>
       </body>
     </html>
   )
 }
+
+
+
 
