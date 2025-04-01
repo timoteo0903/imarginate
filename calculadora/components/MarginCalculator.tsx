@@ -1353,7 +1353,7 @@ const MarginCalculator = () => {
               </TabsContent>
               
               <TabsContent value="taxes">
-                {sellWithVAT || perceptions && (
+                {sellWithVAT && (
                   <Card>
                     <CardContent>
                       <h3 className="text-lg font-semibold mb-4">Desglose de IVA</h3>
@@ -1442,7 +1442,7 @@ const MarginCalculator = () => {
                   </Card>
                 )}
                 
-                {!sellWithVAT || perceptions && (
+                {!sellWithVAT && (
                   <Alert className="bg-yellow-50 border-yellow-200 text-yellow-800">
                     <AlertDescription>
                       No has seleccionado la opción de vender con IVA, por lo que no hay información de IVA para mostrar.
