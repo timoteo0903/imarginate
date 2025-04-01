@@ -271,7 +271,7 @@ const MarginCalculator = () => {
       else {
         salePrice = netAmount
         saleVATAmountValue = 0
-        setSaleVATAmount(0)
+        setSaleVATAmount(saleVATAmountValue)
       }
 
       
@@ -289,14 +289,13 @@ const MarginCalculator = () => {
       
     
       // Balance de IVA
-      const vatBalance =  purchaseVATValue - saleVATAmount;
+      const vatBalance =  purchaseVATValue - saleVATAmountValue;
       setVatBalance(vatBalance);
       
       const calculateMaxDiscount = () => {
 
-        const IVASale = saleVATAmountValue;
-        const IVAPurchase = purchaseVATValue;
-        const vatBalance = IVAPurchase - IVASale;
+        const vatBalance = purchaseVATValue - saleVATAmount;
+        setVatBalance(vatBalance);
 
 
         // Factores que afectan al cálculo
