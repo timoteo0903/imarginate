@@ -45,106 +45,140 @@ const ResultState: React.FC<ResultStateProps> = ({
   // Añadir la presentación de datos detallados como estado de resultados
   const renderDetailedIncomeStatement = () => {
     return (
-      <div className="mt-6">
-        <h4 className="text-md font-medium mb-4">Estado de Resultados</h4>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="text-left p-2 border border-gray-200">Concepto</th>
-              <th className="text-right p-2 border border-gray-200">Monto</th>
-              <th className="text-right p-2 border border-gray-200">%</th>
-            </tr>
-          </thead>
-          <tbody>
-          {discount > 0 && (
-            <tr>
-              <td className="p-2 border border-gray-200 font-medium">Precio de Venta Inicial</td>
-              <td className="text-right p-2 border border-gray-200">{formatCurrency(sellingPrice)}</td>
-              <td className="text-right p-2 border border-gray-200">-</td>
-            </tr>
-           )}
-
-            {discount > 0 && (
-              <tr className="bg-red-50 text-red-700">
-                <td className="p-2 border border-gray-200">(-) Descuento</td>
-                <td className="text-right p-2 border border-gray-200">{formatCurrency(discount)}</td>
-                <td className="text-right p-2 border border-gray-200">-</td>
-              </tr>
-            )}
-
-            <tr>
-              <td className="p-2 border border-gray-200 font-medium">Precio de Venta</td>
-              <td className="text-right p-2 border border-gray-200">{formatCurrency(sellingPriceDiscount)}</td>
-              <td className="text-right p-2 border border-gray-200">100%</td>
-            </tr>
-
-            <tr className="bg-red-50 text-red-700">
-              <td className="p-2 border border-gray-200">(-) Costo del Producto</td>
-              <td className="text-right p-2 border border-gray-200">{formatCurrency(cost)}</td>
-              <td className="text-right p-2 border border-gray-200">
-                {sellingPriceDiscount > 0 ? ((cost / sellingPriceDiscount) * 100).toFixed(1) : "0"}%
-              </td>
-            </tr>
-
-            <tr className="bg-gray-50 text-black-700 font-bold ">
-              <td className="p-2 border border-gray-200">Ganancia Bruta</td>
-              <td className="text-right p-2 border border-gray-200">{formatCurrency(sellingPriceDiscount - cost)}</td>
-              <td className="text-right p-2 border border-gray-200">
-                {sellingPriceDiscount > 0 ? (((sellingPriceDiscount - cost) / sellingPriceDiscount) * 100).toFixed(1) : "0"}%
-              </td>
-            </tr>
-
-            {vatBalance !== undefined && vatBalance !== null && (
-              <tr className={`font-medium ${vatBalance < 0 ? "text-red-500" : "text-green-600"}`}>
-                <td className="p-2 border border-gray-200">Balanza de IVA</td>
-                <td className="text-right p-2 border border-gray-200">{formatCurrency(vatBalance)}</td>
-                <td className="text-right p-2 border border-gray-200">
-                  {sellingPriceDiscount > 0 ? ((Math.abs(vatBalance) / sellingPriceDiscount) * 100).toFixed(1) : "0"}%
-                </td>
-              </tr>
-            )}
-
-            {mercadoPagoFee != 0 && (
-              <tr className="bg-red-50 text-red-700">
-                <td className="p-2 border border-gray-200">(-) Comisión Mercado Pago</td>
-                <td className="text-right p-2 border border-gray-200">{formatCurrency(mercadoPagoFee)}</td>
-                <td className="text-right p-2 border border-gray-200">
-                  {((mercadoPagoFee / sellingPriceDiscount) * 100).toFixed(1)}%
-                </td>
-              </tr>
-            )}
-
-            {taxes != 0 && (
-              <tr className="bg-red-50 text-red-700">
-                <td className="p-2 border border-gray-200">(-) Tasas</td>
-                <td className="text-right p-2 border border-gray-200">{formatCurrency(taxes)}</td>
-                <td className="text-right p-2 border border-gray-200">
-                  {((taxes / sellingPriceDiscount) * 100).toFixed(1)}%
-                </td>
-              </tr>
-            )}
-
-            {perceptions != 0 && (
-              <tr className="bg-red-50 text-red-700">
-                <td className="p-2 border border-gray-200">(-) Impuestos a los IIBB</td>
-                <td className="text-right p-2 border border-gray-200">{formatCurrency(perceptions)}</td>
-                <td className="text-right p-2 border border-gray-200">
-                  {((perceptions / sellingPriceDiscount) * 100).toFixed(1)}%
-                </td>
-              </tr>
-            )}
-
-            <tr className="bg-green-50 font-bold">
-              <td className="bg-green-50 p-2 text-green-700 font-medium font-bold-text">Ganancia Neta</td> 
-              <td className="text-right p-2 border border-gray-200 text-green-700 font-medium font-bold-text">{formatCurrency(profit)}</td>
-              <td className="text-right p-2 border border-gray-200 text-green-700 font-medium font-bold-text">
-                {((profit / sellingPriceDiscount) * 100).toFixed(1)}%
-              </td>
-            </tr>
-          </tbody>
-
-          </table>
+      <div className="w-full max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden">
+        <div className="p-6">
+          <h4 className="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Estado de Resultados</h4>
+  
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-50 border-b-2 border-gray-200">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Concepto</th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-700">Monto</th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-700">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {discount > 0 && (
+                  <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-4 font-medium text-gray-700">Precio de Venta Inicial</td>
+                    <td className="text-right py-3 px-4 text-gray-700">{formatCurrency(sellingPrice)}</td>
+                    <td className="text-right py-3 px-4 text-gray-500">-</td>
+                  </tr>
+                )}
+  
+                {discount > 0 && (
+                  <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-4 font-medium text-red-600 flex items-center">
+                      <span className="inline-block w-5 text-center mr-2">-</span>
+                      <span>Descuento</span>
+                    </td>
+                    <td className="text-right py-3 px-4 text-red-600 font-medium">{formatCurrency(discount)}</td>
+                    <td className="text-right py-3 px-4 text-red-500">-</td>
+                  </tr>
+                )}
+  
+                <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="py-3 px-4 font-medium text-gray-800">Precio de Venta</td>
+                  <td className="text-right py-3 px-4 font-medium text-gray-800">
+                    {formatCurrency(sellingPriceDiscount)}
+                  </td>
+                  <td className="text-right py-3 px-4 font-medium text-gray-600">100%</td>
+                </tr>
+  
+                <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="py-3 px-4 font-medium text-red-600 flex items-center">
+                    <span className="inline-block w-5 text-center mr-2">-</span>
+                    <span>Costo del Producto</span>
+                  </td>
+                  <td className="text-right py-3 px-4 text-red-600 font-medium">{formatCurrency(cost)}</td>
+                  <td className="text-right py-3 px-4 text-red-500">
+                    {sellingPriceDiscount > 0 ? ((cost / sellingPriceDiscount) * 100).toFixed(1) : "0"}%
+                  </td>
+                </tr>
+  
+                <tr className="border-b border-gray-100 bg-gray-50">
+                  <td className="py-3 px-4 font-semibold text-gray-800">Ganancia Bruta</td>
+                  <td
+                    className={`text-right py-3 px-4 font-semibold ${cost >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {formatCurrency(sellingPriceDiscount - cost)}
+                  </td>
+                  <td
+                    className={`text-right py-3 px-4 font-semibold ${profit >= 0 ? "text-green-600" : "text-red-600"}`}
+                  >
+                    {sellingPriceDiscount > 0 ? ((profit / sellingPriceDiscount) * 100).toFixed(1) : "0"}%
+                  </td>
+                </tr>
+  
+                {vatBalance !== undefined && vatBalance !== null && (
+                  <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-4 font-medium text-gray-700">Balanza de IVA</td>
+                    <td
+                      className={`text-right py-3 px-4 font-medium ${vatBalance >= 0 ? "text-green-600" : "text-red-600"}`}
+                    >
+                      {formatCurrency(vatBalance)}
+                    </td>
+                    <td className={`text-right py-3 px-4 ${vatBalance >= 0 ? "text-green-500" : "text-red-500"}`}>
+                      {sellingPriceDiscount > 0 ? ((Math.abs(vatBalance) / sellingPriceDiscount) * 100).toFixed(1) : "0"}%
+                    </td>
+                  </tr>
+                )}
+  
+                {mercadoPagoFee !== 0 && (
+                  <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-4 font-medium text-red-600 flex items-center">
+                      <span className="inline-block w-5 text-center mr-2">-</span>
+                      <span>Comisión Mercado Pago</span>
+                    </td>
+                    <td className="text-right py-3 px-4 text-red-600 font-medium">{formatCurrency(mercadoPagoFee)}</td>
+                    <td className="text-right py-3 px-4 text-red-500">
+                      {((mercadoPagoFee / sellingPriceDiscount) * 100).toFixed(1)}%
+                    </td>
+                  </tr>
+                )}
+  
+                {taxes !== 0 && (
+                  <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-4 font-medium text-red-600 flex items-center">
+                      <span className="inline-block w-5 text-center mr-2">-</span>
+                      <span>Tasas</span>
+                    </td>
+                    <td className="text-right py-3 px-4 text-red-600 font-medium">{formatCurrency(taxes)}</td>
+                    <td className="text-right py-3 px-4 text-red-500">
+                      {((taxes / sellingPriceDiscount) * 100).toFixed(1)}%
+                    </td>
+                  </tr>
+                )}
+  
+                {perceptions !== 0 && (
+                  <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-4 font-medium text-red-600 flex items-center">
+                      <span>Impuestos a los IIBB</span>
+                    </td>
+                    <td className="text-right py-3 px-4 text-red-600 font-medium">{formatCurrency(perceptions * (-1))} </td>
+                    <td className="text-right py-3 px-4 text-red-500">
+                      {((perceptions / sellingPriceDiscount) * 100).toFixed(1)}%
+                    </td>
+                  </tr>
+                )}
+  
+                <tr className={`${profit >= 0 ? "bg-green-50" : "bg-red-50"} rounded-b-lg`}>
+                  <td className={`py-4 px-4 font-bold text-lg ${profit >= 0 ? "text-green-700" : "text-red-700"}`}>
+                    Ganancia Neta
+                  </td>
+                  <td
+                    className={`text-right py-4 px-4 font-bold text-lg ${profit >= 0 ? "text-green-700" : "text-red-700"}`}
+                  >
+                    {formatCurrency(profit)}
+                  </td>
+                  <td className={`text-right py-4 px-4 font-bold ${profit >= 0 ? "text-green-700" : "text-red-700"}`}>
+                    {((profit / sellingPriceDiscount) * 100).toFixed(1)}%
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     )
