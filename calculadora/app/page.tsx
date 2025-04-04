@@ -115,7 +115,7 @@ export default function Home() {
 
             {/* Fixed Installments Button */}
             <motion.div whileHover="hover" variants={buttonHoverVariants}>
-              <Link href="/installments-calculator" passHref className="block">
+              <Link href="/cuotas-calculator" passHref className="block">
                 <div className="w-full h-14 bg-purple-600 hover:bg-purple-700 text-white rounded-xl shadow-md flex items-center justify-center px-2 transition-colors">
                   <CreditCard className="w-5 h-5 mr-2 flex-shrink-0" />
                   <span className="text-base font-medium whitespace-nowrap">¿Cuotas o Contado?</span>
